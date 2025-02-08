@@ -33,6 +33,9 @@ export class Event {
   @Column({ type: 'int', default: 6 })
   max_posters_per_judge: number;
 
+  @Column({ type: 'int', default: 2 })
+  judges_per_poster: number;
+
   @Column({ type: 'jsonb' })
   criteria: object;
 
