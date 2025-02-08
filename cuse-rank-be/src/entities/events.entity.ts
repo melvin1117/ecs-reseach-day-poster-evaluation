@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
 import { User } from './users.entity';
 
 @Entity('events')
@@ -25,6 +25,7 @@ export class Event {
   judging_end_time: Date;
 
   @ManyToOne(() => User)
+  @JoinColumn({ name: 'created_by' })
   created_by: User;
 
   @Column({ type: 'int', default: 2 })

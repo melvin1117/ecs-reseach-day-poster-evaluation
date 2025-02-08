@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn } from 'typeorm';
 import { Event } from './events.entity';
 import { JudgeMaster } from './judges_master.entity';
 
@@ -8,6 +8,7 @@ export class Poster {
   id: string;
 
   @ManyToOne(() => Event)
+  @JoinColumn({ name: 'event_id' })
   event_id: Event;
 
   @Column()
@@ -17,6 +18,7 @@ export class Poster {
   abstract: string;
 
   @ManyToOne(() => JudgeMaster)
+  @JoinColumn({ name: 'advisor_id' })
   advisor_id: JudgeMaster;
 
   @Column()

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './users.entity';
 import { Event } from './events.entity';
 
@@ -8,8 +8,10 @@ export class Organizer {
   id: string;
 
   @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
   user_id: User;
 
   @ManyToOne(() => Event)
+  @JoinColumn({ name: 'event_id' }) 
   event_id: Event;
 }

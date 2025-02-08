@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn } from 'typeorm';
 import { Event } from './events.entity';
 import { Poster } from './posters.entity';
 
@@ -8,9 +8,11 @@ export class Ranking {
   id: string;
 
   @ManyToOne(() => Event)
+  @JoinColumn({ name: 'event_id' })
   event_id: Event;
 
   @ManyToOne(() => Poster)
+  @JoinColumn({ name: 'poster_id' })
   poster_id: Poster;
 
   @Column()
