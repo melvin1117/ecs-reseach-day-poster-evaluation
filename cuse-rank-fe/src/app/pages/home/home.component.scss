@@ -1,0 +1,19 @@
+.hero {
+  height: 100vh;
+  background: url('https://source.unsplash.com/random') no-repeat center center/cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+}
+
+.overlay {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 2rem;
+  border-radius: 10px;
+}
+
+.buttons {
+  margin-top: 20px;
+}
