@@ -20,7 +20,7 @@ export class Ranking {
   final_score: number;
 
   @Column({ type: 'float' })
-  waited_score: number;
+  weighted_score: number;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
