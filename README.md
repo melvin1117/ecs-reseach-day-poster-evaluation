@@ -76,7 +76,7 @@ docker-compose up --build
 - **Organizers** upload research posters and assign judging criteria.
 - **Judges** evaluate assigned posters based on configurable criteria.
 - **ML Module** intelligently assigns judges to posters based on expertise.
-- **Live Ranking System** updates rankings as judges submit evaluations.
+- **Ranking System** updates rankings as judges submit evaluations.
 
 ---
 
