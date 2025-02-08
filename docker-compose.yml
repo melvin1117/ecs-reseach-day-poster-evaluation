@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  cuse-rank-fe:
+    build: ./cuse-rank-fe
+    ports:
+      - "80:4200"
+    depends_on:
+      - cuse-rank-be
+
+  cuse-rank-be:
+    build: ./cuse-rank-be
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=cuse_rank
+
+  cuse-rank-algo:
+    build: ./cuse-rank-algo
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"
+
+  celery-worker:
+    build: ./cuse-rank-algo
+    command: celery -A celery_worker.celery_app worker --loglevel=info
+    depends_on:
+      - redis
+      - cuse-rank-algo
+
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: cuse_rank
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
