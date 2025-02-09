@@ -1,0 +1,46 @@
+.home-container {
+    position: relative;
+    height: 100vh; // Make the container take the full viewport height
+    width: 100%;
+    overflow: hidden;
+}
+
+.background-media {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2; // behind all content
+}
+
+.background-media video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; // ensures the video covers the area
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3); // blackish shade (30% opacity)
+    z-index: -1; // sits between the video and the content
+}
+
+.home-content {
+    position: absolute;
+    bottom: 20%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    z-index: 1;
+}
+
+.home-content button {
+    font-size: 1.5rem; // Bigger text
+    padding: 16px 32px; // Bigger button size
+}
