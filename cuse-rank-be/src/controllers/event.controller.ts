@@ -7,6 +7,13 @@ export class EventController {
   constructor(private readonly eventService: EventService) { }
 
   @UseGuards(JwtAuthGuard)
+  @Get('/:eventId/organizers')
+  async getOrganizersByEvent(@Param('eventId') eventId: string) {
+    const organizers = await this.eventService.getOrganizersByEvent(eventId);
+    return { eventId, organizers };
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get()
   async getUserEvents(@Headers('Authorization') authHeader: string, @Query('eventId') eventId?: string) {
     return await this.eventService.getUserEvents(authHeader, eventId);
