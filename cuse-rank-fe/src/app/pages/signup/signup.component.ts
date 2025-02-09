@@ -67,7 +67,7 @@ export class SignupComponent {
     if (this.signupForm.valid) {
       const { name, email, password } = this.signupForm.value;
       // Adjust the signup method in your AuthService to accept a name parameter if needed.
-      this.authService.signup(email!, password!, name!).subscribe({
+      this.authService.signup(name!, email!, password!).subscribe({
         next: () => this.router.navigate(['/']),
         error: (err) => {
           this.errorMessage = 'Signup failed. Please try again.';
