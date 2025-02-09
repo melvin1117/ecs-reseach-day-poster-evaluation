@@ -19,8 +19,6 @@ import { AuthService } from './services/auth_service';
 import { EventController } from './controllers/event_post_controller';
 import { EventService } from './services/event_post_service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { LogoutController } from './controllers/logout_controller';
-import { LogoutService } from './services/logout_service';
 
 @Module({
   imports: [
@@ -65,7 +63,6 @@ import { LogoutService } from './services/logout_service';
     ScoringController,
     AuthController,
     EventController,
-    LogoutController,
   ],
   providers: [
     JwtAuthGuard,
@@ -73,7 +70,6 @@ import { LogoutService } from './services/logout_service';
     ScoringService,
     AuthService,
     EventService,
-    LogoutService,
   ],
 })
 export class AppModule {}
