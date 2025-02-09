@@ -165,8 +165,8 @@ This scoring system provides **real-time rankings** and ensures **fair, criteria
 
 ### **1️⃣ Clone the Repository**
 ```sh
-git clone https://github.com/your-repo.git
-cd cuse-rank
+git clone https://github.com/melvin1117/ecs-reseach-day-poster-evaluation.git
+cd ecs-reseach-day-poster-evaluation
 ```
 
 ### **2️⃣ Build and Start Containers**
@@ -235,8 +235,8 @@ celery -A celery_worker.celery_app worker --loglevel=info
 ## 📌 How to Contribute
 ### **1️⃣ Fork & Clone the Repository**
 ```sh
-git clone https://github.com/your-repo.git
-cd cuse-rank
+git clone https://github.com/melvin1117/ecs-reseach-day-poster-evaluation.git
+cd ecs-reseach-day-poster-evaluation
 ```
 ### **2️⃣ Create a New Branch**
 ```sh
