@@ -14,6 +14,8 @@ import { Evaluation } from './entities/evaluations.entity';
 import { Ranking } from './entities/rankings.entity';
 import { ScoringService } from './services/scoring.service';
 import { ScoringController } from './controllers/scoring.controller';
+import { ScoringQueryService } from './services/scoring-query.service';
+import { ScoringQueryController } from './controllers/scoring-query.controller';
 import { AuthController } from './controllers/auth_controller';
 import { AuthService } from './services/auth_service';
 import { EventController } from './controllers/event.controller';
@@ -21,6 +23,10 @@ import { EventService } from './services/event.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UploadController } from './controllers/upload_controller';
 import { UploadService } from './services/upload_service';
+import { JudgeController } from './controllers/judge.controller';
+import { JudgeService } from './services/judge.service';
+import { AssignmentService } from './services/assignment.service';
+import { AssignmentController } from './controllers/assignment.controller';
 
 @Module({
   imports: [
@@ -63,17 +69,23 @@ import { UploadService } from './services/upload_service';
   controllers: [
     AppController,
     ScoringController,
+    ScoringQueryController,
     AuthController,
     EventController,
     UploadController,
+    JudgeController,
+    AssignmentController,
   ],
   providers: [
     JwtAuthGuard,
     AppService,
     ScoringService,
+    ScoringQueryService,
     AuthService,
     EventService,
     UploadService,
+    JudgeService,
+    AssignmentService,
   ],
 })
 export class AppModule {}
