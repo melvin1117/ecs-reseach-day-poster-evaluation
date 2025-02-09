@@ -13,9 +13,10 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signup(userData: { email: string; password: string }) {
+  async signup(userData: { name: string; email: string; password: string }) {
     const hashedPassword = await bcrypt.hash(userData.password, 10);
     const newUser = this.usersRepo.create({
+      name: userData.name,
       email: userData.email,
       password_hash: hashedPassword,
       role: 'organizer',
@@ -28,7 +29,7 @@ export class AuthService {
   async login(credentials: { email: string; password: string }) {
     const user = await this.usersRepo.findOne({
       where: { email: credentials.email },
-      select: ['id', 'email', 'password_hash', 'role'],
+      select: ['id', 'name', 'email', 'password_hash', 'role'],
     });
 
     if (!user) throw new Error('Invalid credentials');
@@ -42,6 +43,6 @@ export class AuthService {
 
     const payload = { id: user.id, email: user.email, role: user.role };
     const token = this.jwtService.sign(payload, { expiresIn: '6h' });
-    return { accessToken: token, email: user.email, role: user.role };
+    return { accessToken: token, name: user.name, email: user.email, role: user.role };
   }
 }
