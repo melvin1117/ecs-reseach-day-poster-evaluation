@@ -25,10 +25,10 @@ export class NavbarComponent {
   }
 
   onTitleClick(): void {
-    if (this.authService.currentUser) {
-      this.router.navigate(['/dashboard']);
-    } else {
-      this.router.navigate(['/']);
-    }
+    this.router.navigate(['/']);
+  }
+
+  onUserNameClick(): void {
+    this.router.navigate(['/dashboard']);
   }
 }

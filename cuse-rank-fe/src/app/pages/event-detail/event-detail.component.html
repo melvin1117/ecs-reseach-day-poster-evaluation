@@ -1,0 +1,39 @@
+<div class="event-details-container" *ngIf="event">
+  <mat-card>
+    <mat-card-title>{{ event.name }}</mat-card-title>
+    <mat-card-content>
+      <p><strong>Description:</strong> {{ event.description }}</p>
+      <p>
+        <strong>Start Date:</strong>
+        {{ event.start_date | date:'medium' }}
+      </p>
+      <p>
+        <strong>End Date:</strong>
+        {{ event.end_date | date:'medium' }}
+      </p>
+      <p>
+        <strong>Judging Start:</strong>
+        {{ event.judging_start_time | date:'medium' }}
+      </p>
+      <p>
+        <strong>Judging End:</strong>
+        {{ event.judging_end_time | date:'medium' }}
+      </p>
+      <p><strong>Created By:</strong> {{ event.created_by }}</p>
+      <p>
+        <strong>Min Posters per Judge:</strong> {{ event.min_posters_per_judge }}
+      </p>
+      <p>
+        <strong>Max Posters per Judge:</strong> {{ event.max_posters_per_judge }}
+      </p>
+      <p><strong>Criteria:</strong></p>
+      <ul>
+        <li *ngFor="let item of event.criteria | keyvalue">
+          {{ item.key }}: {{ item.value }}
+        </li>
+      </ul>
+    </mat-card-content>
+  </mat-card>
+</div>
+<div *ngIf="loading">Loading event details...</div>
+<div *ngIf="error">{{ error }}</div>

@@ -1,8 +1,11 @@
 <mat-toolbar color="primary">
+  <!-- App title is clickable -->
   <span class="app-title" (click)="onTitleClick()" style="cursor: pointer;">🍊CuseRank</span>
   <ng-container *ngIf="authService.user$ | async as user; else showLogin">
-    <!-- Now display user.name instead of user.email -->
-    <span>Welcome, {{ user.name }}</span>
+    <!-- Make the username clickable -->
+    <span class="user-name" (click)="onUserNameClick()" style="cursor: pointer;">
+      Welcome, {{ user.name }}
+    </span>
     <button mat-button (click)="onLogout()">Logout</button>
   </ng-container>
   <ng-template #showLogin>

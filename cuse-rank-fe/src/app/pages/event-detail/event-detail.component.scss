@@ -1,0 +1,13 @@
+.event-details-container {
+  padding: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .event-details-container {
+    padding: 10px;
+  }
+  mat-card {
+    margin: 0 10px;
+  }
+}
