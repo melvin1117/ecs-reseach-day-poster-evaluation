@@ -1,0 +1,44 @@
+.evaluate-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: url('https://www.syracuse.edu/images/n9v9iajZiEfEsHHN1XHhSMYU-gI=/4629/width-1300/ANR_2022_Fall_Campus_Images00063_rYJWGU8.jpg') no-repeat center center;
+    background-size: cover;
+    padding: 20px;
+  }
+  
+  .eval-card {
+    max-width: 400px;
+    padding: 20px;
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+  
+  .error {
+    color: red;
+    margin: 10px 0;
+    text-align: center;
+  }
+
+  mat-card-title {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 50px;
+  }
+  
+  mat-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    /* Glassmorphism effect */
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(255, 255, 255, 0.37);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 10px;
+  }
+  

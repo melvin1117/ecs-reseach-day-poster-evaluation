@@ -1,0 +1,101 @@
+<div class="event-details-container" *ngIf="event">
+  <header class="event-header">
+    <div class="header-top">
+      <h1 class="event-title">{{ event.name }}</h1>
+      <button *ngIf="isOwner()" mat-button color="accent" class="edit-button" (click)="editEvent()">
+        Edit Event
+      </button>
+    </div>
+    <p class="event-created">Created By: {{ event.created_by.name }}</p>
+  </header>
+
+  <section class="event-info">
+    <div class="event-section">
+      <h2>Description</h2>
+      <p>{{ event.description }}</p>
+    </div>
+
+    <div class="event-section">
+      <h2>Dates</h2>
+      <p><strong>Start Date:</strong> {{ event.start_date | date:'medium' }}</p>
+      <p><strong>End Date:</strong> {{ event.end_date | date:'medium' }}</p>
+    </div>
+
+    <div class="event-section">
+      <h2>Judging Times</h2>
+      <p><strong>Judging Start:</strong> {{ event.judging_start_time | date:'medium' }}</p>
+      <p><strong>Judging End:</strong> {{ event.judging_end_time | date:'medium' }}</p>
+    </div>
+
+    <div class="event-section">
+      <h2>Poster Limits</h2>
+      <p><strong>Min Posters per Judge:</strong> {{ event.min_posters_per_judge }}</p>
+      <p><strong>Max Posters per Judge:</strong> {{ event.max_posters_per_judge }}</p>
+      <p><strong>Judges per Poster:</strong> {{ event.judges_per_poster }}</p>
+    </div>
+
+    <div class="event-section">
+      <h2>Criteria</h2>
+      <mat-chip-listbox>
+        <mat-chip *ngFor="let crit of event.criteria | keyvalue" color="primary" selected>
+          {{ crit.key }}: {{ crit.value | number:'1.2-2' }}
+        </mat-chip>
+      </mat-chip-listbox>
+    </div>
+  </section>
+
+  <!-- Upload Section: Only visible if event is upcoming and there are no assignments -->
+  <div class="upload-section" *ngIf="isUpcoming() && (!assignments || (assignments.assignments && assignments.assignments.length === 0))">
+    <h2>Upload Mapping Files</h2>
+    <div class="upload-group">
+      <label for="judgesFile">Upload Judges Mapping (Excel):</label>
+      <input type="file" id="judgesFile" (change)="onJudgesFileSelected($event)" accept=".xls,.xlsx" />
+      <button mat-raised-button color="primary" (click)="uploadJudgesFile()" [disabled]="!judgesFile">
+        Upload Judges
+      </button>
+    </div>
+    <div class="upload-group">
+      <label for="postersFile">Upload Posters Mapping (Excel):</label>
+      <input type="file" id="postersFile" (change)="onPostersFileSelected($event)" accept=".xls,.xlsx" />
+      <button mat-raised-button color="primary" (click)="uploadPostersFile()" [disabled]="!postersFile">
+        Upload Posters
+      </button>
+    </div>
+    <p class="upload-message" *ngIf="uploadMessage">{{ uploadMessage }}</p>
+  </div>
+
+  <!-- Assignment Section: Shown if assignments exist -->
+  <div class="assignment-section" *ngIf="assignments && assignments.assignments && assignments.assignments.length > 0">
+    <div class="assignment-header">
+      <h2>Assignments</h2>
+      <button mat-icon-button color="primary" (click)="toggleUniqueCodes()">
+        <mat-icon>{{ showUniqueCodes ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+    </div>
+    <table class="assignments-table">
+      <thead>
+        <tr>
+          <th>Judge Name</th>
+          <th *ngIf="showUniqueCodes">Unique Code</th>
+          <th>Posters</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let assignment of assignments.assignments">
+          <td>{{ assignment.judgeName }}</td>
+          <td *ngIf="showUniqueCodes">{{ assignment.uniqueCode }}</td>
+          <td>
+            <ul>
+              <li *ngFor="let poster of assignment.posters">
+                {{ poster.title }}: {{ poster.abstract }}
+              </li>
+            </ul>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div *ngIf="loading" class="loading">Loading event details...</div>
+<div *ngIf="error" class="error">{{ error }}</div>

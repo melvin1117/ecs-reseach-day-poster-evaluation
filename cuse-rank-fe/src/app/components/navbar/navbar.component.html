@@ -1,11 +1,33 @@
 <mat-toolbar color="primary">
-  <span class="app-title" (click)="onTitleClick()" style="cursor: pointer;">🍊CuseRank</span>
-  <ng-container *ngIf="authService.user$ | async as user; else showLogin">
-    <!-- Now display user.name instead of user.email -->
-    <span>Welcome, {{ user.name }}</span>
-    <button mat-button (click)="onLogout()">Logout</button>
+  <span class="app-title" (click)="router.navigate(['/'])" style="cursor: pointer;">
+    🍊CuseRank
+  </span>
+  
+  <!-- If we're on an evaluation route, show evaluation info in navbar -->
+  <ng-container *ngIf="isEvaluationRoute() && evalService.assignedPosters; else normalUser">
+    <div class="eval-info">
+      <!-- Show avatar if available -->
+      <div class="avatar" *ngIf="evalService.assignedPosters.img; else noAvatar">
+        <img [src]="evalService.assignedPosters.img" alt="{{ evalService.assignedPosters.name }}" />
+      </div>
+      <ng-template #noAvatar>
+        <!-- Optionally, you could show initials or nothing; here we show nothing -->
+      </ng-template>
+      <span class="user-info">Welcome, {{ evalService.assignedPosters.name }}</span>
+      <button mat-button color="warn" (click)="onEvalLogout()">Logout</button>
+    </div>
   </ng-container>
-  <ng-template #showLogin>
-    <button mat-button (click)="onLogin()">Login</button>
+
+  <!-- Otherwise, display the normal login/logout controls -->
+  <ng-template #normalUser>
+    <ng-container *ngIf="authService.currentUser; else loginOption">
+      <span class="user-info" (click)="router.navigate(['/dashboard'])" style="cursor: pointer;">
+        Welcome, {{ authService.currentUser.name }}
+      </span>
+      <button mat-button (click)="onAuthLogout()">Logout</button>
+    </ng-container>
+    <ng-template #loginOption>
+      <button mat-button (click)="onLogin()">Login</button>
+    </ng-template>
   </ng-template>
 </mat-toolbar>
