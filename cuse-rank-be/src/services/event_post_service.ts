@@ -27,7 +27,7 @@ export class EventService {
     const token = authHeader.split(' ')[1];
     try {
       const decoded = this.jwtService.verify(token);
-      const currentTimestamp = Math.floor(Date.now() / 1000); 
+      const currentTimestamp = Math.floor(Date.now() / 1000);
       if (decoded.exp && decoded.exp < currentTimestamp) {
         throw new UnauthorizedException('Token has expired');
       }
@@ -46,10 +46,17 @@ export class EventService {
       end_date: Date;
       judging_start_time: Date;
       judging_end_time: Date;
+      min_posters_per_judge: number;
+      max_posters_per_judge: number;
+      judges_per_poster: number;
       criteria: object;
     },
   ) {
+    console.log('Received Token:', authHeader); // Debugging
+
     const decodedUser = await this.verifyToken(authHeader);
+    console.log('Decoded User:', decodedUser); // Debugging
+
     if (!decodedUser) {
       throw new UnauthorizedException('Unauthorized user');
     }
@@ -66,9 +73,15 @@ export class EventService {
       end_date: eventData.end_date,
       judging_start_time: eventData.judging_start_time,
       judging_end_time: eventData.judging_end_time,
+      min_posters_per_judge: eventData.min_posters_per_judge,
+      max_posters_per_judge: eventData.max_posters_per_judge,
+      judges_per_poster: eventData.judges_per_poster,
       created_by: user,
       criteria: eventData.criteria,
     });
+
+    console.log('Created Event Object:', newEvent); // Debugging
+
     await this.eventsRepo.save(newEvent);
     return { message: 'Event created successfully', event: newEvent };
   }
