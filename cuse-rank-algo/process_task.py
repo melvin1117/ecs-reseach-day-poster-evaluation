@@ -15,11 +15,11 @@ from os import getenv
 from celery_worker import celery_app
 
 # ---------------- Database Configuration ---------------- #
-DB_NAME = getenv('DB_NAME')
-DB_USER = getenv('DB_USER')
-DB_PASSWORD = getenv('DB_PASSWORD')
-DB_HOST = getenv('DB_HOST')
-DB_PORT = getenv('DB_PORT')
+DB_NAME = "cuse_rank"
+DB_USER = "user"
+DB_PASSWORD = "password"
+DB_HOST = "db"
+DB_PORT = 5432
 
 # ---------------- Celery Task ---------------- #
 @celery_app.task(name="process_event") 
