@@ -27,6 +27,13 @@ services:
       - "8000:8000"
     depends_on:
       - redis
+      - db  # Make sure it waits for DB
+    environment:
+    - DB_HOST=db
+    - DB_PORT=5432
+    - DB_USER=user
+    - DB_PASSWORD=password
+    - DB_NAME=cuse_rank
 
   redis:
     image: redis:alpine
@@ -36,10 +43,10 @@ services:
 
   celery-worker:
     build: ./cuse-rank-algo
-    command: celery -A celery_worker.celery_app worker --loglevel=info
+    command: sh -c "sleep 5 && celery -A celery_worker.celery_app worker --loglevel=info"
     depends_on:
       - redis
-      - cuse-rank-algo
+      - cuse-rank-algo  # Make sure Celery waits for FastAPI
 
   db:
     image: postgres:15-alpine
