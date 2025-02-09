@@ -19,7 +19,7 @@ import { CommonModule } from '@angular/common';
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    RouterLink // <-- Added RouterLink so that routerLink in the template works.
+    RouterLink
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
@@ -43,7 +43,7 @@ export class LoginComponent {
     if (this.loginForm.valid) {
       const { email, password } = this.loginForm.value;
       this.authService.login(email!, password!).subscribe({
-        next: () => this.router.navigate(['/']),
+        next: () => this.router.navigate(['/dashboard']),
         error: (err) => {
           this.errorMessage = 'Login failed. Please check your credentials.';
           console.error(err);

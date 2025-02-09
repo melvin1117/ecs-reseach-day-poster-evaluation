@@ -2,14 +2,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 20px;
     height: calc(100vh - 64px);
     /* Use the poster image as the background */
     background: url('https://cdnsecakmi.kaltura.com/p/2707131/thumbnail/entry_id/1_b6v6qzcm/width/2200/quality/75/format/jpg') no-repeat center center;
     background-size: cover;
-    padding: 20px;
-}
-
-mat-card {
+  }
+  
+  mat-card {
     width: 100%;
     max-width: 400px;
     padding: 20px;
@@ -17,23 +17,38 @@ mat-card {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-radius: 10px;
-}
-
-mat-card-title {
+  }
+  
+  mat-card-title {
     text-align: center;
     font-size: 1.8rem;
     margin-bottom: 50px;
-}
-
-.error-message {
+  }
+  
+  .error-message {
     color: red;
     margin: 10px 0;
-}
-
-mat-form-field {
+  }
+  
+  mat-form-field {
     width: 100%;
     margin-bottom: 16px;
-}
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    mat-card {
+      padding: 16px;
+      margin: 0 10px;
+    }
+    mat-card-title {
+      font-size: 1.5rem;
+    }
+    button {
+      width: 100%;
+    }
+  }
+  

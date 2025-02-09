@@ -16,9 +16,8 @@ export class HomeComponent {
   navigateToLogin(): void {
     this.router.navigate(['/login']);
   }
-
+  
   navigateToEvaluate(): void {
-    // Implement your Evaluate/Judge navigation logic here.
-    console.log('Navigate to Evaluate/Judge page');
+    this.router.navigate(['/evaluate']);
   }
 }
