@@ -1,29 +1,55 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { LocalStorageService } from 'ngx-webstorage';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import { CookieService } from 'ngx-cookie-service';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000/auth';
+  private apiUrl = 'https://api.example.com'; // Replace with your actual API endpoint
 
-  constructor(private http: HttpClient, private router: Router, private storage: LocalStorageService) {}
+  private userSubject: BehaviorSubject<User | null> = new BehaviorSubject<User | null>(null);
+  public user$ = this.userSubject.asObservable();
 
-  login(email: string, password: string) {
-    this.http.post(`${this.apiUrl}/login`, { email, password }).subscribe((res: any) => {
-      this.storage.store('jwt', res.token);
-      this.router.navigate(['/']);
-    });
+  constructor(private http: HttpClient, private cookieService: CookieService) {}
+
+  login(email: string, password: string): Observable<{ user: User; token: string }> {
+    return this.http.post<{ user: User; token: string }>(`${this.apiUrl}/login`, { email, password })
+      .pipe(
+        tap(response => {
+          this.userSubject.next(response.user);
+          // Store the token in a cookie with secure options.
+          this.cookieService.set('authToken', response.token, undefined, '/', undefined, true, 'Lax');
+        })
+      );
   }
 
-  logout() {
-    this.storage.clear('jwt');
-    this.router.navigate(['/login']);
+  signup(email: string, password: string, name: string): Observable<{ user: User; token: string }> {
+    return this.http.post<{ user: User; token: string }>(`${this.apiUrl}/signup`, { name, email, password })
+      .pipe(
+        tap(response => {
+          this.userSubject.next(response.user);
+          this.cookieService.set('authToken', response.token, undefined, '/', undefined, true, 'Lax');
+        })
+      );
   }
 
-  isAuthenticated(): boolean {
-    return !!this.storage.retrieve('jwt');
+
+  logout(): void {
+    this.userSubject.next(null);
+    this.cookieService.delete('authToken', '/');
+    // Optionally, call a logout API endpoint.
+  }
+
+  get currentUser(): User | null {
+    return this.userSubject.value;
   }
 }
