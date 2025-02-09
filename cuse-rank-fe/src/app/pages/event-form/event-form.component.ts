@@ -19,8 +19,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { Organizer } from '../../models/organizer.model';
-import { environment } from '../../../environments/environment';
 import { Event } from '../../models/event.model';
+import { AuthService } from '../../services/auth.service';
 
 /**
  * Validator for the criteria FormArray.
@@ -110,6 +110,7 @@ function eventDatesValidator(group: AbstractControl): ValidationErrors | null {
 export class EventFormComponent implements OnInit {
   eventForm!: FormGroup;
   organizers: Organizer[] = [];
+  // Default criteria array used when creating a new event.
   defaultCriteria = [
     { name: 'Innovation', weight: 0.30 },
     { name: 'Clarity', weight: 0.25 },
@@ -125,7 +126,8 @@ export class EventFormComponent implements OnInit {
     private fb: FormBuilder,
     private eventService: EventService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -153,6 +155,7 @@ export class EventFormComponent implements OnInit {
         max_posters_per_judge: [6, [Validators.required, Validators.min(1)]],
         judges_per_poster: [2, [Validators.required, Validators.min(1)]],
         organizersId: [[], Validators.required],
+        // For the form, criteria is maintained as an array of objects.
         criteria: this.fb.array([], criteriaSumValidator)
       },
       { validators: eventDatesValidator }
@@ -172,11 +175,19 @@ export class EventFormComponent implements OnInit {
     }
   }
 
-  // Load organizers using the EventService.
+  // Load organizers from the service.
   loadOrganizers(): void {
     this.eventService.getOrganizers().subscribe({
       next: (data) => {
-        this.organizers = data.organizers;
+        const currentUser = this.authService.currentUser;
+        if (currentUser) {
+          // Filter out the current user from the list of organizers.
+          this.organizers = data.organizers.filter(
+            (organizer: Organizer) => organizer.email !== currentUser.email
+          );
+        } else {
+          this.organizers = data.organizers;
+        }
       },
       error: (err) => {
         console.error('Failed to load organizers:', err);
@@ -184,16 +195,15 @@ export class EventFormComponent implements OnInit {
     });
   }
 
-  // In edit mode, load event details from the API and patch the form.
+  // In edit mode, load event details and patch the form.
   loadEventDetails(eventId: string): void {
     this.eventService.getEventById(eventId).subscribe({
-      next: (eventD: { message: string, event: Event}) => {
-        // Patch main form fields.
-        const eventData = eventD.event;
+      next: (res: { message: string, event: Event }) => {
+        const eventData = res.event;
+        // Patch simple fields.
         this.eventForm.patchValue({
           name: eventData.name,
           description: eventData.description,
-          // For date inputs, convert to the proper string format for datetime-local.
           start_date: this.formatDateForInput(eventData.start_date),
           end_date: this.formatDateForInput(eventData.end_date),
           judging_start_time: this.formatDateForInput(eventData.judging_start_time),
@@ -203,17 +213,19 @@ export class EventFormComponent implements OnInit {
           judges_per_poster: eventData.judges_per_poster,
           organizersId: eventData.organizersId || []
         });
-        // Replace the criteria FormArray with the event's criteria.
+        // Replace the criteria FormArray with values from eventData.criteria.
+        // Since eventData.criteria is now a key–value object,
+        // we convert it into an array of {name, weight} objects.
         const criteriaArray = this.eventForm.get('criteria') as FormArray;
         while (criteriaArray.length) {
           criteriaArray.removeAt(0);
         }
-        if (eventData.criteria && eventData.criteria.length) {
-          eventData.criteria.forEach(crit => {
+        if (eventData.criteria) {
+          Object.entries(eventData.criteria).forEach(([name, weight]) => {
             criteriaArray.push(
               this.fb.group({
-                name: [crit.name, Validators.required],
-                weight: [crit.weight, [Validators.required, Validators.min(0)]]
+                name: [name, Validators.required],
+                weight: [weight, [Validators.required, Validators.min(0)]]
               })
             );
           });
@@ -226,8 +238,7 @@ export class EventFormComponent implements OnInit {
   }
 
   /**
-   * Helper function to format a date string (or Date object) to the required format
-   * for an <input type="datetime-local">.
+   * Helper to format a date string or Date for an input of type datetime-local.
    */
   formatDateForInput(dateStr: string): string {
     const date = new Date(dateStr);
@@ -263,9 +274,20 @@ export class EventFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.eventForm.valid) {
-      const eventData = this.eventForm.value;
+      // Get the form value.
+      let eventData = this.eventForm.value;
+      // Convert criteria array to a key–value object.
+      // From: [{ name: 'Innovation', weight: 0.3 }, ...]
+      // To: { Innovation: 0.3, ... }
+      eventData.criteria = eventData.criteria.reduce(
+        (acc: { [key: string]: number }, curr: { name: string; weight: number }) => {
+          acc[curr.name] = curr.weight;
+          return acc;
+        },
+        {}
+      );
+      // Depending on edit mode, call update or create.
       if (this.isEditMode && this.eventId) {
-        // Update event using the service.
         this.eventService.updateEvent(this.eventId, eventData).subscribe({
           next: (res) => {
             console.log('Event updated successfully', res);
@@ -276,7 +298,6 @@ export class EventFormComponent implements OnInit {
           }
         });
       } else {
-        // Create a new event.
         this.eventService.createEvent(eventData).subscribe({
           next: (res) => {
             console.log('Event created successfully', res);

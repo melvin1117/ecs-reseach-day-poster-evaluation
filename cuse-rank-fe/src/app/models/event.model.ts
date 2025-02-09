@@ -10,7 +10,7 @@ export interface Event {
     min_posters_per_judge: number;
     max_posters_per_judge: number;
     judges_per_poster: number;
-    criteria: any[];
+    criteria: { [criterionName: string]: number };
     organizersId: string[];
   }
   
