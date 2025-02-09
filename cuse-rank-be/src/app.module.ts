@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { JwtModule } from '@nestjs/jwt';
+import { AppController } from './controllers/app.controller';
+import { AppService } from './services/app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/users.entity';
 import { Event } from './entities/events.entity';
@@ -11,9 +12,22 @@ import { Poster } from './entities/posters.entity';
 import { JudgeAssignment } from './entities/judge_assignments.entity';
 import { Evaluation } from './entities/evaluations.entity';
 import { Ranking } from './entities/rankings.entity';
+import { ScoringService } from './services/scoring.service';
+import { ScoringController } from './controllers/scoring.controller';
+import { AuthController } from './controllers/auth_controller';
+import { AuthService } from './services/auth_service';
+import { EventController } from './controllers/event_post_controller';
+import { EventService } from './services/event_post_service';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LogoutController } from './controllers/logout_controller';
+import { LogoutService } from './services/logout_service';
 
 @Module({
   imports: [
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'supersecret',
+      signOptions: { expiresIn: '6h' },
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'db',
@@ -22,15 +36,44 @@ import { Ranking } from './entities/rankings.entity';
       password: process.env.DB_PASSWORD || 'password',
       database: process.env.DB_NAME || 'cuse_rank',
       entities: [
-        User, Event, Organizer, JudgeMaster, EventJudge, Poster, JudgeAssignment, Evaluation, Ranking
+        User,
+        Event,
+        Organizer,
+        JudgeMaster,
+        EventJudge,
+        Poster,
+        JudgeAssignment,
+        Evaluation,
+        Ranking,
       ],
       synchronize: true,
     }),
     TypeOrmModule.forFeature([
-      User, Event, Organizer, JudgeMaster, EventJudge, Poster, JudgeAssignment, Evaluation, Ranking
-    ])
+      User,
+      Event,
+      Organizer,
+      JudgeMaster,
+      EventJudge,
+      Poster,
+      JudgeAssignment,
+      Evaluation,
+      Ranking,
+    ]),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [
+    AppController,
+    ScoringController,
+    AuthController,
+    EventController,
+    LogoutController,
+  ],
+  providers: [
+    JwtAuthGuard,
+    AppService,
+    ScoringService,
+    AuthService,
+    EventService,
+    LogoutService,
+  ],
 })
 export class AppModule {}
