@@ -37,14 +37,14 @@
     <div class="event-section">
       <h2>Criteria</h2>
       <mat-chip-listbox>
-        <mat-chip *ngFor="let crit of event.criteria" color="primary" selected>
-          {{ crit.name }}: {{ crit.weight | number:'1.2-2' }}
+        <mat-chip *ngFor="let crit of event.criteria | keyvalue" color="primary" selected>
+          {{ crit.key }}: {{ crit.value | number:'1.2-2' }}
         </mat-chip>
       </mat-chip-listbox>
     </div>
   </section>
 
-  <!-- Upload Section: Only enabled if event is upcoming and no assignments exist -->
+  <!-- Upload Section: Only visible if event is upcoming and there are no assignments -->
   <div class="upload-section" *ngIf="isUpcoming() && (!assignments || (assignments.assignments && assignments.assignments.length === 0))">
     <h2>Upload Mapping Files</h2>
     <div class="upload-group">
@@ -64,7 +64,7 @@
     <p class="upload-message" *ngIf="uploadMessage">{{ uploadMessage }}</p>
   </div>
 
-  <!-- Assignment Section: Shows a tabular view if assignments exist -->
+  <!-- Assignment Section: Shown if assignments exist -->
   <div class="assignment-section" *ngIf="assignments && assignments.assignments && assignments.assignments.length > 0">
     <div class="assignment-header">
       <h2>Assignments</h2>

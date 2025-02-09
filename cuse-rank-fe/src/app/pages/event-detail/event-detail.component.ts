@@ -23,21 +23,21 @@ export class EventDetailsComponent implements OnInit {
   assignments: AssignmentResponse | null = null;
   loading = false;
   error: string | null = null;
-
-  // For file uploads (judges/posters mapping)
+  
+  // Toggle for showing unique codes in assignments.
+  showUniqueCodes = false;
+  
+  // File upload variables.
   judgesFile: File | null = null;
   postersFile: File | null = null;
   uploadMessage: string = '';
-
-  // Toggle for showing unique codes
-  showUniqueCodes = false;
 
   constructor(
     private route: ActivatedRoute,
     private eventService: EventService,
     private assignmentService: AssignmentService,
     private uploadService: UploadService,
-    private authService: AuthService,
+    public authService: AuthService,
     private router: Router
   ) {}
 
@@ -46,8 +46,9 @@ export class EventDetailsComponent implements OnInit {
     if (eventId) {
       this.loading = true;
       this.eventService.getEventById(eventId).subscribe({
-        next: (event) => {
-          this.event = event.event;
+        next: (response) => {
+          // Assuming the response structure: { message: string, event: Event }
+          this.event = response.event;
           this.loadAssignments(eventId);
           this.loading = false;
         },
@@ -95,7 +96,7 @@ export class EventDetailsComponent implements OnInit {
     return false;
   }
 
-  // File upload methods for judges mapping
+  // File upload methods for judges mapping.
   onJudgesFileSelected(e: any): void {
     const input = e.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -106,7 +107,7 @@ export class EventDetailsComponent implements OnInit {
   uploadJudgesFile(): void {
     if (this.judgesFile && this.event) {
       this.uploadService.uploadJudges(this.event.id, this.judgesFile).subscribe({
-        next: (res) => {
+        next: () => {
           this.uploadMessage = 'Judges file uploaded successfully.';
         },
         error: (err) => {
@@ -117,7 +118,7 @@ export class EventDetailsComponent implements OnInit {
     }
   }
 
-  // File upload methods for posters mapping
+  // File upload methods for posters mapping.
   onPostersFileSelected(e: any): void {
     const input = e.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -128,7 +129,7 @@ export class EventDetailsComponent implements OnInit {
   uploadPostersFile(): void {
     if (this.postersFile && this.event) {
       this.uploadService.uploadPosters(this.event.id, this.postersFile).subscribe({
-        next: (res) => {
+        next: () => {
           this.uploadMessage = 'Posters file uploaded successfully.';
         },
         error: (err) => {
