@@ -20,6 +20,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { Organizer } from '../../models/organizer.model';
 import { Event } from '../../models/event.model';
+import { AuthService } from '../../services/auth.service';
 
 /**
  * Validator for the criteria FormArray.
@@ -125,7 +126,8 @@ export class EventFormComponent implements OnInit {
     private fb: FormBuilder,
     private eventService: EventService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -177,7 +179,15 @@ export class EventFormComponent implements OnInit {
   loadOrganizers(): void {
     this.eventService.getOrganizers().subscribe({
       next: (data) => {
-        this.organizers = data.organizers;
+        const currentUser = this.authService.currentUser;
+        if (currentUser) {
+          // Filter out the current user from the list of organizers.
+          this.organizers = data.organizers.filter(
+            (organizer: Organizer) => organizer.email !== currentUser.email
+          );
+        } else {
+          this.organizers = data.organizers;
+        }
       },
       error: (err) => {
         console.error('Failed to load organizers:', err);
