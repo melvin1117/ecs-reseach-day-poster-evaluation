@@ -1,9 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ nullable: true })
+  name: string;
 
   @Column({ unique: true })
   email: string;
@@ -11,7 +20,7 @@ export class User {
   @Column()
   password_hash: string;
 
-  @Column({ default: 'admin' })
+  @Column({ default: 'organizer' })
   role: string;
 
   @CreateDateColumn({ type: 'timestamp' })
