@@ -1,0 +1,11 @@
+<mat-toolbar color="primary">
+  <span class="app-title" (click)="onTitleClick()" style="cursor: pointer;">🍊CuseRank</span>
+  <ng-container *ngIf="authService.user$ | async as user; else showLogin">
+    <!-- Now display user.name instead of user.email -->
+    <span>Welcome, {{ user.name }}</span>
+    <button mat-button (click)="onLogout()">Logout</button>
+  </ng-container>
+  <ng-template #showLogin>
+    <button mat-button (click)="onLogin()">Login</button>
+  </ng-template>
+</mat-toolbar>

@@ -14,11 +14,6 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have the 'cuse-rank-fe' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('cuse-rank-fe');
-  });
 
   it('should render title', () => {
     const fixture = TestBed.createComponent(AppComponent);

@@ -1,0 +1,39 @@
+.signup-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 64px);
+    /* Use the poster image as the background */
+    background: url('https://cdnsecakmi.kaltura.com/p/2707131/thumbnail/entry_id/1_b6v6qzcm/width/2200/quality/75/format/jpg') no-repeat center center;
+    background-size: cover;
+    padding: 20px;
+}
+
+mat-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    /* Glassmorphism effect */
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 10px;
+}
+
+mat-card-title {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 50px;
+}
+
+.error-message {
+    color: red;
+    margin: 10px 0;
+}
+
+mat-form-field {
+    width: 100%;
+    margin-bottom: 16px;
+}
