@@ -73,7 +73,7 @@ export class EventService {
         .getMany();
     } else if (role === 'organizer') {
       // Fetch only events where the user is an organizer
-      const organizerEvents = await this.organizersRepo.find({ where: { user_id: {id} } });
+      const organizerEvents = await this.organizersRepo.find({ where: { user_id: { id } } });
       const eventIds = organizerEvents.map(org => org.event_id);
 
       events = await this.eventsRepo
@@ -128,15 +128,56 @@ export class EventService {
   // }
 
 
+  // async createEvent(authHeader: string, eventData: any) {
+  //   const decodedUser = await this.verifyToken(authHeader);
+  //   const user = await this.usersRepo.findOne({ where: { id: decodedUser.id } });
+  //   if (!user) throw new UnauthorizedException('User not found');
+
+  //   const newEvent = this.eventsRepo.create({ ...eventData, created_by: user });
+  //   await this.eventsRepo.save(newEvent);
+  //   return { message: 'Event created successfully', event: newEvent };
+  // }
+
   async createEvent(authHeader: string, eventData: any) {
     const decodedUser = await this.verifyToken(authHeader);
+
     const user = await this.usersRepo.findOne({ where: { id: decodedUser.id } });
     if (!user) throw new UnauthorizedException('User not found');
 
-    const newEvent = this.eventsRepo.create({ ...eventData, created_by: user });
+    // Create a new event
+    const newEvent = this.eventsRepo.create({
+      name: eventData.name,
+      description: eventData.description,
+      start_date: eventData.start_date,
+      end_date: eventData.end_date,
+      judging_start_time: eventData.judging_start_time,
+      judging_end_time: eventData.judging_end_time,
+      min_posters_per_judge: eventData.min_posters_per_judge,
+      max_posters_per_judge: eventData.max_posters_per_judge,
+      judges_per_poster: eventData.judges_per_poster,
+      created_by: user,
+      criteria: eventData.criteria,
+    });
+
     await this.eventsRepo.save(newEvent);
-    return { message: 'Event created successfully', event: newEvent };
+
+    // Check if organizer record already exists for this user and event
+    const existingOrganizer = await this.organizersRepo.findOne({
+      where: { user_id: { id: user.id }, event_id: { id: newEvent.id } }
+    });
+
+    if (!existingOrganizer) {
+      // Insert a new record only if the event_id is not already present
+      await this.organizersRepo.save({
+        user_id: { id: user.id },
+        event_id: { id: newEvent.id }
+      });
+    }
+
+    return { message: 'Event created successfully and assigned to organizer', event: newEvent };
   }
+
+
 
   async updateEvent(authHeader: string, eventId: string, updateData: any) {
     const decodedUser = await this.verifyToken(authHeader);
@@ -177,4 +218,27 @@ export class EventService {
     await this.eventsRepo.delete({ created_by: user });
     return { message: 'All events deleted successfully' };
   }
+
+  /* get all organisers*/
+  async getAllOrganizers(authHeader: string) {
+    // Verify JWT token
+    const decodedUser = await this.verifyToken(authHeader);
+
+    // Ensure user exists in the database
+    const user = await this.usersRepo.findOne({ where: { id: decodedUser.id } });
+    if (!user) throw new UnauthorizedException('User not found');
+
+    // Fetch all users where role = 'organizer'
+    const organizers = await this.usersRepo.find({
+      where: { role: 'organizer' },
+      select: ['id', 'name', 'email'], // Only return required fields
+    });
+
+    if (!organizers.length) {
+      throw new NotFoundException('No organizers found');
+    }
+
+    return { message: 'Organizers retrieved successfully', organizers };
+  }
+
 }

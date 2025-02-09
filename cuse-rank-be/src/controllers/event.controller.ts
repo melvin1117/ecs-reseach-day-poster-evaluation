@@ -4,13 +4,19 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
 @Controller('events')
 export class EventController {
-  constructor(private readonly eventService: EventService) {}
+  constructor(private readonly eventService: EventService) { }
 
   @UseGuards(JwtAuthGuard)
   @Get()
   async getUserEvents(@Headers('Authorization') authHeader: string, @Query('eventId') eventId?: string) {
-      return await this.eventService.getUserEvents(authHeader);
-    
+    return await this.eventService.getUserEvents(authHeader);
+
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/organizers')
+  async getAllOrganizers(@Headers('Authorization') authHeader: string) {
+    return await this.eventService.getAllOrganizers(authHeader);
   }
 
   @UseGuards(JwtAuthGuard)
