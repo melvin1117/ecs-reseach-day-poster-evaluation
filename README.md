@@ -12,21 +12,33 @@ The system ensures a seamless evaluation process with a user-friendly interface 
 
 ---
 
-## 🛠️ Tech Stack
+## 🧭 Tech Stack
 - **Frontend**: Angular
 - **Backend**: NestJS (TypeORM, PostgreSQL)
 - **ML Processing**: FastAPI, Celery, Redis
 - **Database**: PostgreSQL
 - **Containerization**: Docker, Docker-Compose
+- **Scraping & Data Processing**: Selenium, Pandas, PostgreSQL, Psycopg2
+- **Judge Allocation Algorithm**: OR-Tools, Sentence Transformers, SQLAlchemy, Celery
+- **Scoring & Ranking Algorithm**: TypeORM, NestJS, PostgreSQL
 
 ---
 
-## 📐 System Architecture
+## 💪 System Architecture
 ```
 Frontend (Angular)  <--->  Backend (NestJS)  <--->  Database (PostgreSQL)
                                    |
                                    v
                    ML Processing (FastAPI + Celery + Redis)
+                                   |
+                                   v
+                         Faculty Scraper (Selenium + PostgreSQL)
+                                   |
+                                   v
+                   Judge Allocation Algorithm (OR-Tools + NLP)
+                                   |
+                                   v
+                  Scoring & Ranking Algorithm (NestJS + PostgreSQL)
 ```
 This architecture enables **modular, scalable, and efficient** handling of research day evaluations, ensuring smooth processing and real-time ranking updates.
 
@@ -63,6 +75,91 @@ View the **database schema & entity relationships** here:
 - ✅ **Dockerized Deployment**: Easy setup for local development and cloud hosting.
 
 ---
+
+## 💪 Scraper Module
+### **Overview**
+The **scraper module** automates the extraction of faculty data from the **Syracuse University ECS Faculty website**. It retrieves **faculty names, emails, degrees, profile details, and image links**, stores the extracted data in a CSV file, and uploads it into the database.
+
+### **Tech Stack**
+- **Web Scraping**: Selenium
+- **Data Processing**: Pandas
+- **Database Integration**: PostgreSQL, Psycopg2
+
+### **Working of Scraper**
+1. **Initialize Selenium WebDriver**:
+   - Uses `webdriver.Chrome()` to open the faculty directory.
+   - Waits for faculty profile elements to load.
+2. **Extract Faculty Information**:
+   - Iterates over each profile, extracting **name, email, degrees, details, and profile images**.
+   - Uses JavaScript-based clicking to navigate dynamically loaded pages.
+3. **Save Data to CSV**:
+   - Stores extracted information in a Pandas DataFrame and writes it to `faculty_data.csv`.
+4. **Post Data to Database**:
+   - Reads `faculty_data.csv` and inserts data into the `judges_master` table.
+   - Uses `ON CONFLICT (email) DO NOTHING` to prevent duplicate insertions.
+
+This module ensures that the system has **an up-to-date list of judges**, mapped directly from the ECS Faculty directory.
+
+---
+
+## 💪 Poster Judge Allocation Algorithm
+### **Overview**
+The **judge allocation algorithm** ensures that each research poster is assigned **exactly 2 judges**, while each judge evaluates **at most 6 posters** based on availability and expertise. The algorithm maximizes fairness and relevance by computing **semantic similarity** between poster abstracts and judge expertise using **Sentence Transformers** and optimizes allocations using **Google OR-Tools**.
+
+### **Tech Stack**
+- **Optimization Framework**: OR-Tools (Google Constraint Programming)
+- **Similarity Computation**: Sentence Transformers, Cosine Similarity
+- **Database Operations**: SQLAlchemy, PostgreSQL
+- **Task Processing**: Celery
+
+### **Working of Algorithm**
+1. **Data Preparation**:
+   - Loads **judges and posters** from the database.
+   - Cleans expertise descriptions and abstracts for similarity computation.
+2. **Computing Judge-Poster Similarity**:
+   - Uses **Sentence Transformers ('all-MiniLM-L6-v2')** to encode **judge expertise** and **poster abstracts**.
+   - Computes **cosine similarity** between judge and poster embeddings.
+3. **Optimization Model (OR-Tools)**:
+   - Ensures each **poster is assigned exactly 2 judges**.
+   - Limits each **judge to evaluate a maximum of 6 posters**.
+   - Ensures **judges are available** during the assigned poster’s session.
+   - **Maximizes overall similarity score** for best judge-poster fit.
+4. **Storing Assignments in Database**:
+   - Inserts final **judge-poster assignments** into the `judge_assignments` table.
+   - Uses `ON CONFLICT` to prevent duplicate assignments.
+
+This algorithm ensures **fairness, expertise-based allocation, and efficient scheduling** for the research evaluation process.
+
+---
+
+## 💪 Scoring & Ranking Algorithm
+### **Overview**
+The **scoring and ranking algorithm** processes **evaluations submitted by judges** to compute the final poster rankings. The algorithm applies **weight normalization**, **relevance-weighted scoring**, and ensures **fair ranking** by balancing diverse judging criteria.
+
+### **Tech Stack**
+- **Backend Framework**: NestJS
+- **Database Management**: PostgreSQL (TypeORM)
+- **Weight Normalization & Aggregation**: TypeScript
+
+### **Working of Algorithm**
+1. **Fetch Evaluations & Posters**:
+   - Retrieves **evaluations** linked to each poster.
+   - Loads event-specific **criteria weightage** from the database.
+2. **Compute Weighted Scores**:
+   - Normalizes weightage across criteria.
+   - Computes weighted scores per judge evaluation.
+   - Adjusts scores based on **judge expertise relevance**.
+3. **Calculate Final Rankings**:
+   - Averages scores across assigned judges.
+   - Generates **rankings based on weighted final scores**.
+4. **Store Rankings in Database**:
+   - Inserts computed rankings into the `rankings` table.
+   - Ensures **correct referencing of event and poster entities**.
+
+This scoring system provides **real-time rankings** and ensures **fair, criteria-based evaluation** for research poster presentations.
+
+---
+
 
 ## 🚀 Setup & Installation (Docker)
 
