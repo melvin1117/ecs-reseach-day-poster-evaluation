@@ -26,10 +26,8 @@ export class NavbarComponent {
 
   onTitleClick(): void {
     if (this.authService.currentUser) {
-      // If logged in, navigate to the dashboard.
       this.router.navigate(['/dashboard']);
     } else {
-      // Otherwise, navigate to the homepage.
       this.router.navigate(['/']);
     }
   }

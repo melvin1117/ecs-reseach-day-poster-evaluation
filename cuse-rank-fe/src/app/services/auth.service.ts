@@ -3,52 +3,71 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { CookieService } from 'ngx-cookie-service';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-}
+import { environment } from '../../environments/environment';
+import { User, LoginResponse } from '../models/auth.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'https://api.example.com'; // Replace with your actual API endpoint
-
-  private userSubject: BehaviorSubject<User | null> = new BehaviorSubject<User | null>(null);
+  // Base URL taken from the environment file.
+  private apiUrl = environment.apiBaseUrl;
+  
+  // Observable user state.
+  private userSubject = new BehaviorSubject<User | null>(null);
   public user$ = this.userSubject.asObservable();
 
-  constructor(private http: HttpClient, private cookieService: CookieService) {}
+  constructor(
+    private http: HttpClient,
+    private cookieService: CookieService
+  ) {}
 
-  login(email: string, password: string): Observable<{ user: User; token: string }> {
-    return this.http.post<{ user: User; token: string }>(`${this.apiUrl}/login`, { email, password })
-      .pipe(
-        tap(response => {
-          this.userSubject.next(response.user);
-          // Store the token in a cookie with secure options.
-          this.cookieService.set('authToken', response.token, undefined, '/', undefined, true, 'Lax');
-        })
-      );
+  /**
+   * Signup API call.
+   * Endpoint: POST /auth/signup
+   * Request Body: { name: string; email: string; password: string }
+   * Response: { message: string }
+   */
+  signup(name: string, email: string, password: string): Observable<{ message: string }> {
+    const url = `${this.apiUrl}/auth/signup`;
+    return this.http.post<{ message: string }>(url, { name, email, password });
   }
 
-  signup(email: string, password: string, name: string): Observable<{ user: User; token: string }> {
-    return this.http.post<{ user: User; token: string }>(`${this.apiUrl}/signup`, { name, email, password })
-      .pipe(
-        tap(response => {
-          this.userSubject.next(response.user);
-          this.cookieService.set('authToken', response.token, undefined, '/', undefined, true, 'Lax');
-        })
-      );
+  /**
+   * Login API call.
+   * Endpoint: POST /auth/login
+   * Request Body: { email: string; password: string }
+   * Response: { accessToken: string, name: string, email: string, role: string }
+   *
+   * On success, store the access token in a cookie and update the current user.
+   */
+  login(email: string, password: string): Observable<LoginResponse> {
+    const url = `${this.apiUrl}/auth/login`;
+    return this.http.post<LoginResponse>(url, { email, password }).pipe(
+      tap(response => {
+        // Store the token in a secure cookie.
+        this.cookieService.set('authToken', response.accessToken, undefined, '/', undefined, true, 'Lax');
+        // Update the current user.
+        this.userSubject.next({
+          name: response.name,
+          email: response.email,
+          role: response.role
+        });
+      })
+    );
   }
 
-
+  /**
+   * Logs out the current user.
+   */
   logout(): void {
     this.userSubject.next(null);
     this.cookieService.delete('authToken', '/');
-    // Optionally, call a logout API endpoint.
   }
 
+  /**
+   * Returns the current user synchronously.
+   */
   get currentUser(): User | null {
     return this.userSubject.value;
   }
