@@ -84,7 +84,9 @@ export class UploadService {
 
     for (const row of postersData) {
       if (!(row[1] == null && row[2] == null && row[5] == null)) {
-        // Avoid inserting null/empty rows
+        const serialNumber = parseInt(String(row[0]), 10);
+        const slots = serialNumber % 2 === 0 ? 2 : 1; // Even = 2 slots, Odd = 1 slot
+
         const title = String(row[1]).trim();
         const abstract = String(row[2]).trim();
         const program = String(row[5]).trim();
@@ -108,16 +110,8 @@ export class UploadService {
           abstract,
           program,
           advisor_id: advisor ? advisor : null,
+          slots,
         });
-
-        // if (advisor) {
-        //   await this.eventJudgesRepo.insert({
-        //     unique_code: Math.floor(100000 + Math.random() * 900000).toString(),
-        //     event_id: event,
-        //     judge_id: { id: advisor.id },
-        //     availability: 'both', // Assuming advisors have full availability
-        //   });
-        // }
       }
     }
 
