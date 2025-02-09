@@ -6,9 +6,11 @@ export interface Event {
     end_date: string;
     judging_start_time: string;
     judging_end_time: string;
-    created_by: string;
+    created_by: any;
     min_posters_per_judge: number;
     max_posters_per_judge: number;
-    criteria: { [key: string]: number }; // key-value pairs of criteria and their weights
+    judges_per_poster: number;
+    criteria: any[];
+    organizersId: string[];
   }
   

@@ -8,21 +8,21 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private cookieService: CookieService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    // Define endpoints that should skip token injection.
+    // Endpoints to skip token injection.
     const skipTokenEndpoints = ['/auth/login', '/auth/signup'];
-
-    // Check if the request URL contains any of the endpoints in skipTokenEndpoints.
     const shouldSkipToken = skipTokenEndpoints.some(endpoint => req.url.includes(endpoint));
 
     if (shouldSkipToken) {
-      // If the request URL matches one of the skip endpoints, forward it unmodified.
+      // Debug log for skipped endpoints.
+      console.log(`Skipping auth header for ${req.url}`);
       return next.handle(req);
     }
 
-    // Otherwise, retrieve the token from the cookie.
+    // Retrieve the token from the cookie.
     const token = this.cookieService.get('authToken');
+    console.log(`Token from cookie for ${req.url}:`, token);
 
-    // If a token exists, clone the request and add the Authorization header.
+    // If a token exists, add the Authorization header.
     if (token) {
       const cloned = req.clone({
         setHeaders: {
@@ -32,7 +32,7 @@ export class AuthInterceptor implements HttpInterceptor {
       return next.handle(cloned);
     }
 
-    // If no token exists, simply forward the original request.
+    // If no token exists, forward the request unmodified.
     return next.handle(req);
   }
 }

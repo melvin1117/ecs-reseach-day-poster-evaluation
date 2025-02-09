@@ -9,7 +9,7 @@ export class EventController {
   @UseGuards(JwtAuthGuard)
   @Get()
   async getUserEvents(@Headers('Authorization') authHeader: string, @Query('eventId') eventId?: string) {
-    return await this.eventService.getUserEvents(authHeader);
+    return await this.eventService.getUserEvents(authHeader, eventId);
 
   }
 

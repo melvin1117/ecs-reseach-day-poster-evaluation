@@ -1,9 +1,30 @@
 .dashboard-container {
   padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.loading-message,
+.error-message,
+.empty-section {
+  text-align: center;
+  margin: 20px 0;
 }
 
 .section {
   margin-bottom: 30px;
+}
+
+.section h2 {
+  margin-bottom: 15px;
+  font-size: 1.5rem;
 }
 
 .cards-container {
@@ -15,15 +36,35 @@
 
 .event-card {
   width: 300px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
 }
 
 .event-card:hover {
-  transform: scale(1.02);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Responsive adjustments */
+.mat-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.mat-card-content p {
+  font-size: 0.9rem;
+  margin: 0.3rem 0;
+}
+
+.description {
+  min-height: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @media (max-width: 600px) {
   .event-card {
     width: 100%;

@@ -1,0 +1,41 @@
+mat-card {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+mat-card-title {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 50px;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.criteria-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.criteria-field {
+    flex: 1;
+    min-width: 150px;
+}
+
+.criteria-error {
+    color: red;
+    margin: 5px 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    mat-card {
+        padding: 16px;
+        margin: 0 10px;
+    }
+}

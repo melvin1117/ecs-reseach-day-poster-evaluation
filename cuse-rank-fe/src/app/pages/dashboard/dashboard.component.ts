@@ -27,7 +27,7 @@ export class DashboardComponent implements OnInit {
     this.loading = true;
     this.eventService.getEvents().subscribe({
       next: (events) => {
-        this.events = events;
+        this.events = events.events;
         this.categorizeEvents();
         this.loading = false;
       },
@@ -59,5 +59,9 @@ export class DashboardComponent implements OnInit {
 
   viewEventDetails(event: Event): void {
     this.router.navigate(['/events', event.id]);
+  }
+
+  createEvent(): void {
+    this.router.navigate(['/events/create']);
   }
 }

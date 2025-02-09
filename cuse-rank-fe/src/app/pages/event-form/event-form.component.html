@@ -1,0 +1,117 @@
+<mat-card>
+    <mat-card-title>{{ isEditMode ? 'Edit Event' : 'Create Event' }}</mat-card-title>
+    <mat-card-content>
+      <form [formGroup]="eventForm" (ngSubmit)="onSubmit()">
+        <!-- Event Name -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Event Name</mat-label>
+          <input matInput formControlName="name" placeholder="Enter event name" />
+          <mat-error *ngIf="eventForm.get('name')?.hasError('required')">Event name is required</mat-error>
+        </mat-form-field>
+  
+        <!-- Description -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" placeholder="Enter description"></textarea>
+        </mat-form-field>
+  
+        <!-- Start Date -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Start Date & Time</mat-label>
+          <input matInput formControlName="start_date" type="datetime-local" />
+          <mat-error *ngIf="eventForm.get('start_date')?.hasError('required')">Start date is required</mat-error>
+          <mat-error *ngIf="eventForm.hasError('startDateInvalid')">{{ eventForm.errors?.['startDateInvalid'] }}</mat-error>
+        </mat-form-field>
+  
+        <!-- End Date -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>End Date & Time</mat-label>
+          <input matInput formControlName="end_date" type="datetime-local" />
+          <mat-error *ngIf="eventForm.get('end_date')?.hasError('required')">End date is required</mat-error>
+          <mat-error *ngIf="eventForm.hasError('endDateInvalid')">{{ eventForm.errors?.['endDateInvalid'] }}</mat-error>
+        </mat-form-field>
+  
+        <!-- Judging Start Time -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Judging Start Time</mat-label>
+          <input matInput formControlName="judging_start_time" type="datetime-local" />
+          <mat-error *ngIf="eventForm.get('judging_start_time')?.hasError('required')">Judging start time is required</mat-error>
+          <mat-error *ngIf="eventForm.hasError('judgingStartInvalid')">{{ eventForm.errors?.['judgingStartInvalid'] }}</mat-error>
+        </mat-form-field>
+  
+        <!-- Judging End Time -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Judging End Time</mat-label>
+          <input matInput formControlName="judging_end_time" type="datetime-local" />
+          <mat-error *ngIf="eventForm.get('judging_end_time')?.hasError('required')">Judging end time is required</mat-error>
+          <mat-error *ngIf="eventForm.hasError('judgingEndInvalid')">{{ eventForm.errors?.['judgingEndInvalid'] }}</mat-error>
+          <mat-error *ngIf="eventForm.hasError('judgingEndAfterEndDate')">{{ eventForm.errors?.['judgingEndAfterEndDate'] }}</mat-error>
+        </mat-form-field>
+  
+        <!-- Min Posters per Judge -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Min Posters per Judge</mat-label>
+          <input matInput formControlName="min_posters_per_judge" type="number" />
+        </mat-form-field>
+  
+        <!-- Max Posters per Judge -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Max Posters per Judge</mat-label>
+          <input matInput formControlName="max_posters_per_judge" type="number" />
+        </mat-form-field>
+  
+        <!-- Judges per Poster -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Judges per Poster</mat-label>
+          <input matInput formControlName="judges_per_poster" type="number" />
+        </mat-form-field>
+  
+        <!-- Organizers: Multiple Select -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Organizers</mat-label>
+          <mat-select formControlName="organizersId" multiple>
+            <mat-option *ngFor="let organizer of organizers" [value]="organizer.id">
+              {{ organizer.name }} ({{ organizer.email }})
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="eventForm.get('organizersId')?.hasError('required')">
+            Please select at least one organizer
+          </mat-error>
+        </mat-form-field>
+  
+        <!-- Criteria Section -->
+        <div formArrayName="criteria">
+          <div *ngFor="let criteriaGroup of criteriaControls; let i = index" [formGroupName]="i" class="criteria-group">
+            <mat-form-field appearance="outline" class="criteria-field">
+              <mat-label>Criteria Name</mat-label>
+              <input matInput formControlName="name" placeholder="e.g., Innovation" />
+              <mat-error *ngIf="criteriaGroup.get('name')?.hasError('required')">
+                Criteria name is required
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="criteria-field">
+              <mat-label>Weight</mat-label>
+              <input matInput formControlName="weight" type="number" step="0.01" placeholder="e.g., 0.30" />
+              <mat-error *ngIf="criteriaGroup.get('weight')?.hasError('required')">
+                Weight is required
+              </mat-error>
+            </mat-form-field>
+            <button mat-button color="warn" type="button" (click)="removeCriteria(i)" *ngIf="criteriaControls.length > 1">
+              Remove
+            </button>
+          </div>
+          <div class="criteria-error" *ngIf="eventForm.get('criteria')?.errors?.['criteriaSumNotOne']">
+            The sum of all criteria weights must be equal to 1.
+          </div>
+          <button mat-button color="primary" type="button" (click)="addCriteria()">
+            Add Criteria
+          </button>
+        </div>
+  
+        <button mat-raised-button color="primary" type="submit">
+          {{ isEditMode ? 'Update Event' : 'Create Event' }}
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+  

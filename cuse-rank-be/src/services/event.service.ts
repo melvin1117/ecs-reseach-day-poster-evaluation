@@ -50,17 +50,81 @@ export class EventService {
   }
 
 
-  async getUserEvents(authHeader: string) {
+  async getUserEvents(authHeader: string, eventId?: string) {
     const decodedUser = await this.verifyToken(authHeader);
     const { id, role } = decodedUser;
-
+  
+    // If an eventId query parameter is provided, return details for that event only
+    if (eventId) {
+      if (role === 'admin') {
+        // Admins can view any event by eventId
+        const event = await this.eventsRepo
+          .createQueryBuilder('event')
+          .leftJoinAndSelect('event.created_by', 'user') // Join with creator details
+          .where('event.id = :eventId', { eventId })
+          .select([
+            'event.id', 'event.name', 'event.description',
+            'event.start_date', 'event.end_date',
+            'event.judging_start_time', 'event.judging_end_time',
+            'event.min_posters_per_judge', 'event.max_posters_per_judge',
+            'event.judges_per_poster', 'event.criteria',
+            'event.created_at', 'event.updated_at',
+            'user.id', 'user.name', 'user.email'
+          ])
+          .getOne();
+  
+        if (!event) {
+          throw new NotFoundException('Event not found');
+        }
+        return { message: 'Event retrieved successfully', event };
+  
+      } else if (role === 'organizer') {
+        // Organizers must be associated with the event to view its details
+        const organizerRecord = await this.organizersRepo.findOne({
+          where: { 
+            user_id: { id },
+            event_id: { id: eventId } // Convert eventId to number if needed
+          },
+          relations: ['event_id']
+        });
+  
+        if (!organizerRecord) {
+          throw new UnauthorizedException('You are not an organizer for this event');
+        }
+  
+        // Return the full event details (you can adjust the fields as necessary)
+        const event = await this.eventsRepo
+          .createQueryBuilder('event')
+          .leftJoinAndSelect('event.created_by', 'user')
+          .where('event.id = :eventId', { eventId })
+          .select([
+            'event.id', 'event.name', 'event.description',
+            'event.start_date', 'event.end_date',
+            'event.judging_start_time', 'event.judging_end_time',
+            'event.min_posters_per_judge', 'event.max_posters_per_judge',
+            'event.judges_per_poster', 'event.criteria',
+            'event.created_at', 'event.updated_at',
+            'user.id', 'user.name', 'user.email'
+          ])
+          .getOne();
+  
+        if (!event) {
+          throw new NotFoundException('Event not found');
+        }
+        return { message: 'Event retrieved successfully', event };
+  
+      } else {
+        throw new UnauthorizedException('You do not have permission to view this event');
+      }
+    }
+  
+    // If no eventId is provided, fetch events based on the user's role
     let events;
-
     if (role === 'admin') {
-      // Fetch all events with creator details
+      // Admin: Fetch all events with creator details
       events = await this.eventsRepo
         .createQueryBuilder('event')
-        .leftJoinAndSelect('event.created_by', 'user') // Join with users table
+        .leftJoinAndSelect('event.created_by', 'user')
         .select([
           'event.id', 'event.name', 'event.description',
           'event.start_date', 'event.end_date',
@@ -68,17 +132,21 @@ export class EventService {
           'event.min_posters_per_judge', 'event.max_posters_per_judge',
           'event.judges_per_poster', 'event.criteria',
           'event.created_at', 'event.updated_at',
-          'user.id', 'user.name', 'user.email' // Include creator's name and email
+          'user.id', 'user.name', 'user.email'
         ])
         .getMany();
+  
     } else if (role === 'organizer') {
-      // Fetch only events where the user is an organizer
-      const organizerEvents = await this.organizersRepo.find({ where: { user_id: { id } } });
-      const eventIds = organizerEvents.map(org => org.event_id);
-
+      // Organizer: First, find events where the user is an organizer
+      const organizerEvents = await this.organizersRepo.find({
+        where: { user_id: { id } },
+        relations: ['event_id'] // Loads the entire Event entity
+      });
+      const eventIds = organizerEvents.map(org => org.event_id.id);
+  
       events = await this.eventsRepo
         .createQueryBuilder('event')
-        .leftJoinAndSelect('event.created_by', 'user') // Join with users table
+        .leftJoinAndSelect('event.created_by', 'user')
         .where('event.id IN (:...eventIds)', { eventIds })
         .select([
           'event.id', 'event.name', 'event.description',
@@ -87,19 +155,21 @@ export class EventService {
           'event.min_posters_per_judge', 'event.max_posters_per_judge',
           'event.judges_per_poster', 'event.criteria',
           'event.created_at', 'event.updated_at',
-          'user.id', 'user.name', 'user.email' // Include creator's name and email
+          'user.id', 'user.name', 'user.email'
         ])
         .getMany();
+  
     } else {
       throw new UnauthorizedException('You do not have permission to view events');
     }
-
-    if (!events.length) {
+  
+    if (!events || !events.length) {
       throw new NotFoundException('No events found for this user');
     }
-
+  
     return { message: 'Events retrieved successfully', events };
   }
+  
 
 
   // async getUserEvents(authHeader: string) {
@@ -139,12 +209,12 @@ export class EventService {
   // }
 
   async createEvent(authHeader: string, eventData: any) {
+    // Verify token and fetch the user who is creating the event
     const decodedUser = await this.verifyToken(authHeader);
-
     const user = await this.usersRepo.findOne({ where: { id: decodedUser.id } });
     if (!user) throw new UnauthorizedException('User not found');
-
-    // Create a new event
+  
+    // Create a new event using data from eventData
     const newEvent = this.eventsRepo.create({
       name: eventData.name,
       description: eventData.description,
@@ -158,25 +228,39 @@ export class EventService {
       created_by: user,
       criteria: eventData.criteria,
     });
-
+  
     await this.eventsRepo.save(newEvent);
-
-    // Check if organizer record already exists for this user and event
-    const existingOrganizer = await this.organizersRepo.findOne({
-      where: { user_id: { id: user.id }, event_id: { id: newEvent.id } }
-    });
-
-    if (!existingOrganizer) {
-      // Insert a new record only if the event_id is not already present
-      await this.organizersRepo.save({
-        user_id: { id: user.id },
-        event_id: { id: newEvent.id }
-      });
+  
+    // Prepare the list of organizer IDs.
+    // If eventData.organizersId is provided and is an array, use it; otherwise, start with an empty array.
+    const organizerIds: string[] = Array.isArray(eventData.organizersId)
+      ? [...eventData.organizersId]
+      : [];
+  
+    // Ensure the event creator is always an organizer.
+    if (!organizerIds.includes(user.id)) {
+      organizerIds.push(user.id);
     }
-
-    return { message: 'Event created successfully and assigned to organizer', event: newEvent };
+  
+    // For each organizer ID, check if an organizer record already exists for the new event.
+    // If it doesn't, create a new organizer record.
+    const organizerPromises = organizerIds.map(async (organizerId) => {
+      const existingOrganizer = await this.organizersRepo.findOne({
+        where: { user_id: { id: organizerId }, event_id: { id: newEvent.id } },
+      });
+  
+      if (!existingOrganizer) {
+        return this.organizersRepo.save({
+          user_id: { id: organizerId },
+          event_id: { id: newEvent.id },
+        });
+      }
+    });
+  
+    await Promise.all(organizerPromises);
+  
+    return { message: 'Event created successfully and organizers assigned', event: newEvent };
   }
-
 
 
   async updateEvent(authHeader: string, eventId: string, updateData: any) {
