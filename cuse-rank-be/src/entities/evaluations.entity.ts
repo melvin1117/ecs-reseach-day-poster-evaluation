@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Unique, JoinColumn } from 'typeorm';
 import { EventJudge } from './event_judges.entity';
 import { Poster } from './posters.entity';
 
@@ -9,9 +9,11 @@ export class Evaluation {
   id: string;
 
   @ManyToOne(() => EventJudge)
+  @JoinColumn({ name: 'judge_id' })
   judge_id: EventJudge;
 
   @ManyToOne(() => Poster)
+  @JoinColumn({ name: 'poster_id' })
   poster_id: Poster;
 
   @Column({ type: 'jsonb' })
