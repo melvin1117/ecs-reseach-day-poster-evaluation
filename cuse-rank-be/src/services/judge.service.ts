@@ -1,92 +1,137 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, In } from 'typeorm';
-import { JudgeMaster } from '../entities/judges_master.entity';
-import { EventJudge } from '../entities/event_judges.entity';
-import { JudgeAssignment } from '../entities/judge_assignments.entity';
-import { Poster } from '../entities/posters.entity';
+import { EventJudge } from 'src/entities/event_judges.entity';
+import { JudgeAssignment } from 'src/entities/judge_assignments.entity';
+import { JudgeMaster } from 'src/entities/judges_master.entity';
+import { Poster } from 'src/entities/posters.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class JudgeService {
-    constructor(
-        @InjectRepository(JudgeMaster)
-        private judgesRepo: Repository<JudgeMaster>,
+  constructor(
+    @InjectRepository(JudgeMaster)
+    private readonly judgesMasterRepo: Repository<JudgeMaster>,
 
-        @InjectRepository(EventJudge)
-        private eventJudgesRepo: Repository<EventJudge>,
+    @InjectRepository(EventJudge)
+    private readonly eventJudgesRepo: Repository<EventJudge>,
 
-        @InjectRepository(JudgeAssignment)
-        private judgeAssignmentsRepo: Repository<JudgeAssignment>,
+    @InjectRepository(JudgeAssignment)
+    private readonly judgeAssignmentsRepo: Repository<JudgeAssignment>,
 
-        @InjectRepository(Poster)
-        private postersRepo: Repository<Poster>,
-    ) { }
+    @InjectRepository(Poster)
+    private readonly postersRepo: Repository<Poster>,
+  ) {}
 
-    async getJudgeAssignedPosters(judgeEmail: string, uniqueCode: string) {
-        // Step 1: Extract NetID from Email
-        const netID = judgeEmail.split('@')[0];
+  async getAssignments(netid: string, uniqueCode: string) {
+    //
+    // 1. Find the judge in judges_master using the netid.
+    //
+    // We assume that the netid is the part of the email before the '@'.
+    // We use the PostgreSQL function split_part to extract that.
+    //
+    const judge = await this.judgesMasterRepo
+      .createQueryBuilder('jm')
+      .where("split_part(jm.email, '@', 1) = :netid", { netid })
+      .getOne();
 
-        // Find all judges with matching NetID in `judges_master`
-        const matchingJudges = await this.judgesRepo.find({
-            where: { email: Like(`${netID}@%`) }, // Matches all emails with the same NetID
-            select: ['id'],
-        });
-
-        if (!matchingJudges.length) {
-            throw new NotFoundException(`No judge found with NetID: ${netID}`);
-        }
-
-        // Extract all matched judge IDs
-        const judgeIds = matchingJudges.map(judge => judge.id);
-
-        // Step 2: Find Matching Event in `event_judges` using judge_id & unique_code
-        const eventJudges = await this.eventJudgesRepo.find({
-            where: { judge_id: In(judgeIds), unique_code: uniqueCode }, // Matching uniqueCode & judge_id
-            select: ['id', 'event_id', 'judge_id'],
-        });
-
-        if (!eventJudges.length) {
-            throw new NotFoundException('No matching event found for this judge with the provided unique code');
-        }
-
-        const eventJudgeIds = eventJudges.map(ej => ej.id);
-        const eventIds = eventJudges.map(ej => ej.event_id);
-
-        // Step 3: Find Assigned Posters in `judge_assignments`
-        const judgeAssignments = await this.judgeAssignmentsRepo.find({
-            where: { judge_id: In(eventJudgeIds) },
-            select: ['poster_id', 'relevance_score'],
-        });
-        console.log(judgeAssignments, eventJudgeIds, eventJudges)
-        if (!judgeAssignments.length) {
-            throw new NotFoundException('No poster assignments found for this judge');
-        }
-
-        const posterIds = judgeAssignments.map(ja => ja.poster_id);
-        const relevanceScoresMap = new Map(judgeAssignments.map(ja => [String(ja.poster_id), ja.relevance_score]));
-
-        // Step 4: Fetch Posters Details
-        const posters = await this.postersRepo.find({
-            where: { id: In(posterIds) },
-            select: ['id', 'event_id', 'title', 'abstract', 'advisor_id', 'program', 'created_at'],
-        });
-
-        if (!posters.length) {
-            throw new NotFoundException('No posters found for the assigned poster IDs');
-        }
-
-        // Attach relevance score to the poster details
-        const response = posters.map(poster => ({
-            id: poster.id,
-            event_id: poster.event_id,
-            title: poster.title,
-            abstract: poster.abstract,
-            advisor_id: poster.advisor_id,
-            program: poster.program,
-            created_at: poster.created_at,
-            relevance_score: relevanceScoresMap.get(String(poster.id)), // Ensure ID is treated as string
-        }));
-
-        return { message: 'Assigned posters retrieved successfully', posters: response };
+    if (!judge) {
+      throw new NotFoundException(
+        'Judge not found with the provided netid',
+      );
     }
+
+    //
+    // 2. Find the event judge mapping in event_judges by matching judge_id and unique code.
+    //
+    const eventJudge = await this.eventJudgesRepo.findOne({
+      where: {
+        judge_id: judge,
+        unique_code: uniqueCode,
+      },
+    });
+
+
+    if (!eventJudge) {
+      throw new NotFoundException(
+        'No event mapping found for this judge with the provided unique code',
+      );
+    }
+
+    //
+    // 3. Get all judge assignments for this event judge.
+    //
+    // Note: In judge_assignments, the judge_id refers to the event_judges.id.
+    //
+    // We use QueryBuilder to join with the posters table (to get poster details)
+    // and left join with judges_master (to get the advisor’s name if advisor exists).
+    //
+    const assignments = await this.judgeAssignmentsRepo
+      .createQueryBuilder('ja')
+      // Join with posters table using poster_id
+      .innerJoin(
+        Poster,
+        'p',
+        'p.id = ja.poster_id',
+      )
+      // Left join with judges_master to get advisor details (if any)
+      .leftJoin(
+        JudgeMaster,
+        'advisor',
+        'advisor.id = p.advisor_id',
+      )
+      .where('ja.judge_id = :eventJudgeId', { eventJudgeId: eventJudge.id })
+      .andWhere('ja.event_id = :eventId', { eventId: eventJudge.event_id })
+      // Select only the needed columns.
+      .select([
+        'ja.relevance_score AS relevance_score',
+        'p.title AS title',
+        'p.abstract AS abstract',
+        'p.program AS program',
+        'p.slot AS slot',
+        'p.advisor_id AS advisor_id',
+        'advisor.name AS advisor_name',
+      ])
+      .getRawMany();
+
+    //
+    // 4. Group the poster assignments by the poster's slot.
+    //
+    // The final response will include each poster with its details and the relevance score.
+    //
+    const groupedPosters = {};
+    assignments.forEach((a) => {
+      const slot = a.slot; // Assuming slot values like 1 or 2
+      if (!groupedPosters[slot]) {
+        groupedPosters[slot] = [];
+      }
+      groupedPosters[slot].push({
+        title: a.title,
+        abstract: a.abstract,
+        program: a.program,
+        relevance_score: a.relevance_score,
+        // If advisor_id is present, include advisor details
+        advisor:
+          a.advisor_id !== null
+            ? {
+                advisor_id: a.advisor_id,
+                name: a.advisor_name,
+              }
+            : null,
+      });
+    });
+
+    //
+    // 5. Prepare the final response.
+    //
+    const response = {
+      judge_id: judge.id,
+      name: judge.name,
+      email: judge.email,
+      dept: judge.department,
+      event_id: eventJudge.event_id,
+      posters: groupedPosters, // Grouped by the poster's slot
+    };
+
+    return response;
+  }
 }

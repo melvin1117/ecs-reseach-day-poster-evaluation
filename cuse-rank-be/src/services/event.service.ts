@@ -169,44 +169,6 @@ export class EventService {
   
     return { message: 'Events retrieved successfully', events };
   }
-  
-
-
-  // async getUserEvents(authHeader: string) {
-  //   const decodedUser = await this.verifyToken(authHeader);
-  //   const { id, role } = decodedUser;
-
-  //   let events;
-
-  //   if (role === 'admin') {
-  //       // Fetch all events if the user is an admin
-  //       events = await this.eventsRepo.find();
-  //   } else if (role === 'organizer') {
-  //       // Fetch events where the user is listed in the "organizers" table
-  //       const organizerEvents = await this.organizersRepo.find({ where: { user_id: {id} } });
-  //       const eventIds = organizerEvents.map(org => org.event_id);
-  //       events = await this.eventsRepo.findByIds(eventIds);
-  //   } else {
-  //       throw new UnauthorizedException('You do not have permission to view events');
-  //   }
-
-  //   if (!events.length) {
-  //       throw new NotFoundException('No events found for this user');
-  //   }
-
-  //   return { message: 'Events retrieved successfully', events };
-  // }
-
-
-  // async createEvent(authHeader: string, eventData: any) {
-  //   const decodedUser = await this.verifyToken(authHeader);
-  //   const user = await this.usersRepo.findOne({ where: { id: decodedUser.id } });
-  //   if (!user) throw new UnauthorizedException('User not found');
-
-  //   const newEvent = this.eventsRepo.create({ ...eventData, created_by: user });
-  //   await this.eventsRepo.save(newEvent);
-  //   return { message: 'Event created successfully', event: newEvent };
-  // }
 
   async createEvent(authHeader: string, eventData: any) {
     // Verify token and fetch the user who is creating the event
@@ -323,6 +285,22 @@ export class EventService {
     }
 
     return { message: 'Organizers retrieved successfully', organizers };
+  }
+
+  async getOrganizersByEvent(eventId: string) {
+    return this.organizersRepo
+      .createQueryBuilder('organizer')
+      .innerJoinAndSelect('users', 'user', 'user.id = organizer.user_id')
+      .where('organizer.event_id = :eventId', { eventId })
+      .select([
+        'organizer.id',
+        'user.id AS user_id',
+        'user.name',
+        'user.email',
+        'user.role',
+        'user.created_at',
+      ])
+      .getRawMany();
   }
 
 }
