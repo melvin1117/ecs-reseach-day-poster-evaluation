@@ -80,39 +80,64 @@ export class UploadService {
     }
 
     const postersData = await readXlsxFile(filePath);
-    postersData.shift();
+    const headers = postersData.shift(); // Extract column names
+
+    // Find the index of 'Poster #' column dynamically
+    const posterNumIndex = headers.findIndex((col) =>
+      col.toString().toLowerCase().includes('poster #'),
+    );
+
+    if (posterNumIndex === -1) {
+      throw new Error("Column 'Poster #' not found in the uploaded file.");
+    }
+
+    let validPosterNumber = 1; // Track sequential numbering while ignoring null rows
 
     for (const row of postersData) {
-      if (!(row[1] == null && row[2] == null && row[5] == null)) {
-        const serialNumber = parseInt(String(row[0]), 10);
-        const slots = serialNumber % 2 === 0 ? 2 : 1; // Even = 2 slots, Odd = 1 slot
+      // Skip completely empty rows
+      if (row.every((cell) => cell === null || cell === '')) {
+        continue;
+      }
 
-        const title = String(row[1]).trim();
-        const abstract = String(row[2]).trim();
-        const program = String(row[5]).trim();
-        const advisorFirstName = String(row[3]).trim();
-        const advisorLastName = String(row[4]).trim();
+      // Extract Poster #
+      const rawSerial = row[posterNumIndex];
+      if (rawSerial == null || rawSerial === '') {
+        continue; // Ignore rows without a Poster # value
+      }
+
+      // Assign a sequential number manually to maintain order
+      const serialNumber = validPosterNumber;
+      validPosterNumber++; // Increment only for valid posters
+
+      const slots = serialNumber % 2 === 0 ? 2 : 1; // Even = 2 slots, Odd = 1 slot
+
+      // Extract other poster details
+      const title = String(row[1] ?? '').trim();
+      const abstract = String(row[2] ?? '').trim();
+      const program = String(row[5] ?? '').trim();
+      const advisorFirstName = String(row[3] ?? '').trim();
+      const advisorLastName = String(row[4] ?? '').trim();
 
         const advisor = await this.judgesMasterRepo.findOne({
-          where: { name: Like('%${advisorFirstName}%${advisorLastName}%') },
+          where: { name: Like(`%${advisorFirstName}%${advisorLastName}%`) },
         });
 
-        if (!advisor) {
-          console.warn(
-            `Warning: Advisor '${advisorFirstName}' not found, setting advisor_id to NULL`,
-          );
-        }
-
-        await this.postersRepo.insert({
-          created_at: new Date(),
-          event_id: event,
-          title,
-          abstract,
-          program,
-          advisor_id: advisor ? advisor : null,
-          slots,
-        });
+      if (!advisor) {
+        console.warn(
+          `Warning: Advisor '${advisorFirstName} ${advisorLastName}' not found, setting advisor_id to NULL`,
+        );
       }
+
+      // Insert poster with calculated slots
+      await this.postersRepo.insert({
+        created_at: new Date(),
+        event_id: event,
+        title,
+        abstract,
+        program,
+        advisor_id: advisor ? advisor : null,
+        slots, // Assign slots dynamically
+      });
     }
 
     return { message: 'Posters data uploaded successfully' };
