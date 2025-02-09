@@ -54,10 +54,10 @@ export class JudgeService {
 
         // Step 3: Find Assigned Posters in `judge_assignments`
         const judgeAssignments = await this.judgeAssignmentsRepo.find({
-            where: { judge_id: In(judgeIds), event_id: In(eventIds) },
+            where: { judge_id: In(eventJudgeIds) },
             select: ['poster_id', 'relevance_score'],
         });
-
+        console.log(judgeAssignments, eventJudgeIds, eventJudges)
         if (!judgeAssignments.length) {
             throw new NotFoundException('No poster assignments found for this judge');
         }

@@ -24,7 +24,7 @@
 }
 
 .edit-button {
-  /* Additional styling can be added here if desired */
+  /* Optional styling for edit button */
 }
 
 .event-created {
@@ -66,6 +66,66 @@ mat-chip-listbox {
   gap: 8px;
 }
 
+.upload-section {
+  margin-top: 40px;
+  padding: 20px;
+  background: #eef;
+  border-radius: 8px;
+}
+
+.upload-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.upload-group label {
+  font-weight: bold;
+}
+
+.upload-message {
+  font-size: 1rem;
+  color: green;
+  text-align: center;
+}
+
+.assignment-section {
+  margin-top: 40px;
+  padding: 20px;
+  background: #f0f8ff;
+  border-radius: 8px;
+}
+
+.assignment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.assignments-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.assignments-table th,
+.assignments-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+.assignments-table th {
+  background: #ddd;
+}
+
+.assignments-table ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+}
+
 .loading,
 .error {
   text-align: center;
@@ -79,6 +139,9 @@ mat-chip-listbox {
   .event-info {
     grid-template-columns: 1fr;
   }
+  .assignments-table {
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 600px) {
@@ -89,7 +152,9 @@ mat-chip-listbox {
   .event-title {
     font-size: 1.8rem;
   }
-  .event-section {
+  .event-section,
+  .upload-section,
+  .assignment-section {
     padding: 10px;
   }
 }

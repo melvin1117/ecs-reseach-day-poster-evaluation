@@ -22,7 +22,7 @@ export class EvaluationService {
     const params = new HttpParams()
       .set('email', judgeEmail)
       .set('uniqueCode', uniqueCode);
-    return this.http.get<EvaluationResponse>(`${this.apiUrl}/assigned-posters`, { params }).pipe(
+    return this.http.get<EvaluationResponse>(`${this.apiUrl}/judges/assigned-posters`, { params }).pipe(
       tap(response => {
         this.assignedPosters = response;
         localStorage.setItem(this.storageKey, JSON.stringify(response));

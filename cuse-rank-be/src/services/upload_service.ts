@@ -24,7 +24,7 @@ export class UploadService {
   async processJudgesData(filePath: string, eventId: string) {
     const event = await this.eventsRepo.findOne({ where: { id: eventId } });
     if (!event) {
-      throw new NotFoundException(`Event with ID ${eventId} not found`);
+      throw new NotFoundException('Event with ID ${eventId} not found');
     }
 
     const judgesData = await readXlsxFile(filePath);
@@ -42,7 +42,7 @@ export class UploadService {
         department !== '' &&
         availability !== ''
       ) {
-        //const name = `${firstName} ${lastName}`;
+        //const name = ${firstName} ${lastName};
 
         //let judge = await this.judgesMasterRepo.findOne({ where: { name } });
 
@@ -64,7 +64,7 @@ export class UploadService {
             unique_code: Math.floor(100000 + Math.random() * 900000).toString(),
             event_id: event,
             judge_id: judge,
-            availability: availability,
+            availability: JSON.stringify({ status: availability }),
           });
         }
       }
@@ -76,7 +76,7 @@ export class UploadService {
   async processPostersData(filePath: string, eventId: string) {
     const event = await this.eventsRepo.findOne({ where: { id: eventId } });
     if (!event) {
-      throw new NotFoundException(`Event with ID ${eventId} not found`);
+      throw new NotFoundException('Event with ID ${eventId} not found');
     }
 
     const postersData = await readXlsxFile(filePath);
@@ -92,7 +92,7 @@ export class UploadService {
         const advisorLastName = String(row[4]).trim();
 
         const advisor = await this.judgesMasterRepo.findOne({
-          where: { name: Like(`%${advisorFirstName}%${advisorLastName}%`) },
+          where: { name: Like('%${advisorFirstName}%${advisorLastName}%') },
         });
 
         if (!advisor) {
