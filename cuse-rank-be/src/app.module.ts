@@ -19,6 +19,8 @@ import { AuthService } from './services/auth_service';
 import { EventController } from './controllers/event_post_controller';
 import { EventService } from './services/event_post_service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { UploadController } from './controllers/upload_controller';
+import { UploadService } from './services/upload_service';
 
 @Module({
   imports: [
@@ -63,6 +65,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     ScoringController,
     AuthController,
     EventController,
+    UploadController,
   ],
   providers: [
     JwtAuthGuard,
@@ -70,6 +73,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     ScoringService,
     AuthService,
     EventService,
+    UploadService,
   ],
 })
 export class AppModule {}
