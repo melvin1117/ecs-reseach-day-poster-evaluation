@@ -14,6 +14,6 @@ export interface EvaluationResponse {
   email: string;
   img: string;
   dept: any;
-  event_id: any;
+  event: any;
   posters: { [group: string]: Poster[] }
 }

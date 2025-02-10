@@ -2,6 +2,7 @@ export interface Poster {
     id: string;
     title: string;
     abstract: string;
+    slot: string;
   }
   
   export interface Assignment {

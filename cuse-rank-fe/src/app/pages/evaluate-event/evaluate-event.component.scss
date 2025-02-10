@@ -6,7 +6,7 @@
 }
 
 /* Overall container for evaluation results */
-.evaluate-results-container {
+.evaluate-event-container {
   padding: 16px 0;
 }
 
@@ -46,4 +46,23 @@
 /* Optional additional padding inside each card */
 .poster-card {
   padding: 16px;
+  cursor: pointer;
+}
+
+/* Limit abstract to 4 lines when collapsed */
+p.collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;  /* Limit to 4 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;  /* Adjust if needed */
+}
+
+/* Styling for the read more/less link */
+.read-more {
+  color: blue;
+  cursor: pointer;
+  text-decoration: underline;
+  display: inline-block;
+  margin-top: 8px;
 }

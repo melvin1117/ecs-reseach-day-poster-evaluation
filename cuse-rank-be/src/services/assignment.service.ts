@@ -48,6 +48,7 @@ export class AssignmentService {
         'p.id AS poster_id',
         'p.title AS poster_title',
         'p.abstract AS poster_abstract',
+        'p.slots AS slot'
       ])
       .getRawMany();
 
@@ -66,6 +67,7 @@ export class AssignmentService {
         id: row.poster_id,
         title: row.poster_title,
         abstract: row.poster_abstract,
+        slot: row.slot
       });
     }
 
