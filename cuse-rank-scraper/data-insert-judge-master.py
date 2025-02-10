@@ -9,7 +9,7 @@ DB_NAME = "cuse_rank"
 DB_USER = "user"
 DB_PASSWORD = "password"
 DB_HOST = "localhost"  # Change if using a remote database
-DB_PORT = "5432"  # Default PostgreSQL port
+DB_PORT = "5432"       # Default PostgreSQL port
 
 # Establish connection
 try:
@@ -31,7 +31,26 @@ try:
             ON CONFLICT (email) DO NOTHING;
         """, (row["Name"], row["Email"], row["Degree"], row["Details"], row["Image Link"]))
 
-    # Commit changes
+    # Check if there are any users in the users table
+    cursor.execute("SELECT COUNT(*) FROM users;")
+    user_count = cursor.fetchone()[0]
+
+    # If no users exist, insert two dummy users
+    if user_count == 0:
+        cursor.execute("""
+            INSERT INTO users (email, name, password_hash, role, created_at, updated_at)
+            VALUES 
+              (%s, %s, %s, %s, NOW(), NOW()),
+              (%s, %s, %s, %s, NOW(), NOW());
+        """, (
+            'organizer@syr.edu', 'SU ORG', 'password', 'organizer',
+            'admin@syr.edu', 'SU Admin', 'password', 'admin'
+        ))
+        print("Dummy users inserted.")
+    else:
+        print("Users already exist. Dummy users were not inserted.")
+
+    # Commit all changes (both judges_master and users inserts)
     conn.commit()
     print("Data inserted successfully.")
 

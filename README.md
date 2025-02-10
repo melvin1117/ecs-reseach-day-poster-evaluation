@@ -190,13 +190,15 @@ This command will start the following services:
 - **Redis (Task Queue):** `localhost:6379`
 - **Database UI (Adminer):** [http://localhost:8080](http://localhost:8080)
 
-### Inserting Data into the Database
+## Following need to be run if the docker is being built for the first time 
+
+### Inserting Scraped Data into the Database
 After the Docker services are running, open a new terminal window, navigate to the project directory, and run the data insertion script:
 ```bash
 cd cuse-rank-scraper
 python ./data-insert-judge-master.py
 ```
-This script will insert the necessary data into your database.
+This script will insert the scraped data from the SU ECS faculty webpage into your database.
 
 ### Updating Scraped Data
 To update the scraped data, follow these steps:
