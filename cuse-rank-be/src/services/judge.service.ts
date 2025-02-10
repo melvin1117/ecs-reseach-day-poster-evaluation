@@ -25,73 +25,90 @@ export class JudgeService {
   async getAssignments(netid: string, uniqueCode: string) {
     //
     // 1. Find the judge in judges_master using the netid.
-    //
-    // We assume that the netid is the part of the email before the '@'.
-    // We use the PostgreSQL function split_part to extract that.
+    //    (We assume that netid is the part of the email before the '@'.)
     //
     const judge = await this.judgesMasterRepo
       .createQueryBuilder('jm')
       .where("split_part(jm.email, '@', 1) = :netid", { netid })
       .getOne();
-
+  
     if (!judge) {
       throw new NotFoundException(
         'Judge not found with the provided netid',
       );
     }
-    
-    //
-    // 2. Find the event judge mapping in event_judges by matching judge_id and unique code.
-    //
-    const eventJudge = await this.eventJudgesRepo
-    .createQueryBuilder('ej')
-    .leftJoinAndSelect('ej.event_id', 'event')
-    .where('ej.unique_code = :uniqueCode', { uniqueCode })
-    .andWhere('ej.judge_id = :judgeId', { judgeId: judge.id })
-    .getOne();
   
-
-    if (!eventJudge) {
+    //
+    // 2. Find all event judge mapping rows in event_judges matching judge_id and unique code.
+    //    (There might be multiple rows.)
+    //
+    const eventJudges = await this.eventJudgesRepo
+      .createQueryBuilder('ej')
+      .leftJoinAndSelect('ej.event_id', 'event')
+      .where('ej.unique_code = :uniqueCode', { uniqueCode })
+      .andWhere('ej.judge_id = :judgeId', { judgeId: judge.id })
+      .getMany();
+  
+    if (!eventJudges || eventJudges.length === 0) {
       throw new NotFoundException(
         'No event mapping found for this judge with the provided unique code',
       );
     }
-
+  
     //
-    // 3. Get all judge assignments for this event judge.
+    // 3. Filter the event judge mappings to select only the active ones.
+    //    The active event is determined by checking if the current time is between
+    //    the event’s judging_start_time and judging_end_time.
     //
-    // Note: In judge_assignments, the judge_id refers to the event_judges.id.
+    const now = new Date();
+    const activeEventJudges = eventJudges.filter((ej) => {
+      if (ej.event_id && ej.event_id.judging_start_time && ej.event_id.judging_end_time) {
+        const startTime = new Date(ej.event_id.judging_start_time);
+        const endTime = new Date(ej.event_id.judging_end_time);
+        return now >= startTime && now <= endTime;
+      }
+      return false;
+    });
+  
+    if (activeEventJudges.length === 0) {
+      throw new NotFoundException('No active event judging right now');
+    }
+  
+    if (activeEventJudges.length > 1) {
+      throw new NotFoundException('Multiple active event judging mappings found');
+    }
+  
+    const activeEventJudge = activeEventJudges[0];
+  
     //
-    // We use QueryBuilder to join with the posters table (to get poster details)
-    // and left join with judges_master (to get the advisor’s name if advisor exists).
+    // 4. Get all judge assignments for this active event judge.
+    //    Note: In judge_assignments, the judge_id refers to the event_judges.id.
     //
     const sql = `
-    SELECT
-      ja.relevance_score AS relevance_score,
-      p.title AS title,
-      p.abstract AS abstract,
-      p.program AS program,
-      p.slots AS slots,
-      p.advisor_id AS advisor_id,
-      advisor.name AS advisor_name
+      SELECT
+        ja.relevance_score AS relevance_score,
+        p.title AS title,
+        p.abstract AS abstract,
+        p.program AS program,
+        p.slots AS slots,
+        p.advisor_id AS advisor_id,
+        advisor.name AS advisor_name
       FROM judge_assignments AS ja
-      INNER JOIN posters AS p
-        ON p.id = ja.poster_id
-      LEFT JOIN judges_master AS advisor
-        ON advisor.id = p.advisor_id
+        INNER JOIN posters AS p
+          ON p.id = ja.poster_id
+        LEFT JOIN judges_master AS advisor
+          ON advisor.id = p.advisor_id
       WHERE ja.judge_id = $1
         AND ja.event_id = $2;
     `;
-    
+  
     const assignments = await this.judgeAssignmentsRepo.query(sql, [
-      eventJudge.id,
-      eventJudge.event_id.id,
+      activeEventJudge.id,
+      activeEventJudge.event_id.id,
     ]);
-
+  
     //
-    // 4. Group the poster assignments by the poster's slot.
-    //
-    // The final response will include each poster with its details and the relevance score.
+    // 5. Group the poster assignments by the poster's slot.
     //
     const groupedPosters = {};
     assignments.forEach((a) => {
@@ -104,7 +121,6 @@ export class JudgeService {
         abstract: a.abstract,
         program: a.program,
         relevance_score: a.relevance_score,
-        // If advisor_id is present, include advisor details
         advisor:
           a.advisor_id !== null
             ? {
@@ -114,9 +130,9 @@ export class JudgeService {
             : null,
       });
     });
-
+  
     //
-    // 5. Prepare the final response.
+    // 6. Prepare the final response.
     //
     const response = {
       judge_id: judge.id,
@@ -124,10 +140,11 @@ export class JudgeService {
       email: judge.email,
       img: judge.profile_img,
       dept: judge.department,
-      event_id: eventJudge.event_id,
+      event_id: activeEventJudge.event_id,
       posters: groupedPosters, // Grouped by the poster's slot
     };
-
+  
     return response;
   }
+  
 }
