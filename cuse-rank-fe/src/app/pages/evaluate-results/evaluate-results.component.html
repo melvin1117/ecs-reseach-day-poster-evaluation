@@ -1,15 +1,25 @@
-<div class="evaluate-results-container" *ngIf="evaluationResponse">
-  <!-- No header here; the navbar displays the judge info -->
-  <section class="posters-container">
-    <mat-card *ngFor="let poster of evaluationResponse.posters" class="poster-card">
-      <mat-card-title>{{ poster.title }}</mat-card-title>
-      <mat-card-content>
-        <p>{{ poster.abstract }}</p>
-        <p><strong>Relevance Score:</strong> {{ poster.relevance_score | number:'1.2-2' }}</p>
-      </mat-card-content>
-    </mat-card>
-  </section>
-</div>
+<div class="container">
+  <div class="evaluate-results-container" *ngIf="evaluationResponse">
+    <!-- Loop through each group in the posters object -->
+    <section class="group-container" *ngFor="let group of evaluationResponse.posters | keyvalue">
+      <h2 class="group-title">Hour: {{ group.key }}</h2>
+      <div class="cards-grid">
+        <mat-card *ngFor="let poster of group.value" class="poster-card">
+          <mat-card-header>
+            <mat-card-title>{{ poster.title }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>{{ poster.abstract }}</p>
+            <p>
+              <strong>Program:</strong>
+              {{ poster.program }}
+            </p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+  </div>
 
-<div *ngIf="loading" class="loading">Loading event details...</div>
-<div *ngIf="error" class="error">{{ error }}</div>
+  <div *ngIf="loading" class="loading">Loading event details...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+</div>

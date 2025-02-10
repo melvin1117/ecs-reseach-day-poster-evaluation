@@ -1,18 +1,19 @@
 export interface Poster {
-    id: string;
-    event_id: string;
-    title: string;
-    abstract: string;
-    advisor_id: string;
-    program: string;
-    created_at: string;
-    relevance_score: number;
-  }
-  
-  export interface EvaluationResponse {
-    message: string;
-    posters: Poster[];
-    name: string;
-    img?: string;
-  }
-  
+  id: string;
+  event_id: string;
+  title: string;
+  abstract: string;
+  program: string;
+  relevance_score: number;
+  advisor: string | null;
+}
+
+export interface EvaluationResponse {
+  judge_id: string;
+  name: string;
+  email: string;
+  img: string;
+  dept: any;
+  event_id: any;
+  posters: { [group: string]: Poster[] }
+}
