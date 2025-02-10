@@ -31,6 +31,8 @@ import { FastApiController } from './controllers/fast-api.controller';
 import { FastApiService } from './services/fast-api.service';
 import { FileUploadedCheckerController } from './controllers/file-uploader-checker.controller';
 import { FileUploadedCheckerService } from './services/file-uploader-checker.service';
+import { RankedPostersService } from './services/ranked-posters.service';
+import { RankedPostersController } from './controllers/ranked-posters.controller';
 
 @Module({
   imports: [
@@ -81,6 +83,7 @@ import { FileUploadedCheckerService } from './services/file-uploader-checker.ser
     AssignmentController,
     FastApiController,
     FileUploadedCheckerController,
+    RankedPostersController,
   ],
   providers: [
     JwtAuthGuard,
@@ -94,6 +97,7 @@ import { FileUploadedCheckerService } from './services/file-uploader-checker.ser
     AssignmentService,
     FastApiService,
     FileUploadedCheckerService,
+    RankedPostersService,
   ],
 })
 export class AppModule {}
