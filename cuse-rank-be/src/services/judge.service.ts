@@ -39,17 +39,17 @@ export class JudgeService {
         'Judge not found with the provided netid',
       );
     }
-
+    
     //
     // 2. Find the event judge mapping in event_judges by matching judge_id and unique code.
     //
-    const eventJudge = await this.eventJudgesRepo.findOne({
-      where: {
-        judge_id: judge,
-        unique_code: uniqueCode,
-      },
-    });
-
+    const eventJudge = await this.eventJudgesRepo
+    .createQueryBuilder('ej')
+    .leftJoinAndSelect('ej.event_id', 'event')
+    .where('ej.unique_code = :uniqueCode', { uniqueCode })
+    .andWhere('ej.judge_id = :judgeId', { judgeId: judge.id })
+    .getOne();
+  
 
     if (!eventJudge) {
       throw new NotFoundException(
@@ -65,33 +65,28 @@ export class JudgeService {
     // We use QueryBuilder to join with the posters table (to get poster details)
     // and left join with judges_master (to get the advisor’s name if advisor exists).
     //
-    const assignments = await this.judgeAssignmentsRepo
-      .createQueryBuilder('ja')
-      // Join with posters table using poster_id
-      .innerJoin(
-        Poster,
-        'p',
-        'p.id = ja.poster_id',
-      )
-      // Left join with judges_master to get advisor details (if any)
-      .leftJoin(
-        JudgeMaster,
-        'advisor',
-        'advisor.id = p.advisor_id',
-      )
-      .where('ja.judge_id = :eventJudgeId', { eventJudgeId: eventJudge.id })
-      .andWhere('ja.event_id = :eventId', { eventId: eventJudge.event_id })
-      // Select only the needed columns.
-      .select([
-        'ja.relevance_score AS relevance_score',
-        'p.title AS title',
-        'p.abstract AS abstract',
-        'p.program AS program',
-        'p.slot AS slot',
-        'p.advisor_id AS advisor_id',
-        'advisor.name AS advisor_name',
-      ])
-      .getRawMany();
+    const sql = `
+    SELECT
+      ja.relevance_score AS relevance_score,
+      p.title AS title,
+      p.abstract AS abstract,
+      p.program AS program,
+      p.slots AS slots,
+      p.advisor_id AS advisor_id,
+      advisor.name AS advisor_name
+      FROM judge_assignments AS ja
+      INNER JOIN posters AS p
+        ON p.id = ja.poster_id
+      LEFT JOIN judges_master AS advisor
+        ON advisor.id = p.advisor_id
+      WHERE ja.judge_id = $1
+        AND ja.event_id = $2;
+    `;
+    
+    const assignments = await this.judgeAssignmentsRepo.query(sql, [
+      eventJudge.id,
+      eventJudge.event_id.id,
+    ]);
 
     //
     // 4. Group the poster assignments by the poster's slot.
@@ -100,7 +95,7 @@ export class JudgeService {
     //
     const groupedPosters = {};
     assignments.forEach((a) => {
-      const slot = a.slot; // Assuming slot values like 1 or 2
+      const slot = a.slots; // Assuming slot values like 1 or 2
       if (!groupedPosters[slot]) {
         groupedPosters[slot] = [];
       }
@@ -127,6 +122,7 @@ export class JudgeService {
       judge_id: judge.id,
       name: judge.name,
       email: judge.email,
+      img: judge.profile_img,
       dept: judge.department,
       event_id: eventJudge.event_id,
       posters: groupedPosters, // Grouped by the poster's slot

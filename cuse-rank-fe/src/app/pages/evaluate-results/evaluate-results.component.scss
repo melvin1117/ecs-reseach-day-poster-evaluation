@@ -1,47 +1,49 @@
+/* Container to mimic a Bootstrap container */
+.container {
+  max-width: 1200px;   // Maximum width can be adjusted as needed
+  margin: 0 auto;      // Centers the container
+  padding: 0 16px;     // Horizontal padding for some breathing room
+}
+
+/* Overall container for evaluation results */
 .evaluate-results-container {
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
+  padding: 16px 0;
 }
 
-.posters-container {
-  display: flex;
-  flex-wrap: wrap;
+/* Each group container has spacing from the next */
+.group-container {
+  margin-bottom: 32px;
+}
+
+/* Styling for the group title */
+.group-title {
+  margin-bottom: 16px;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+/* Grid container for poster cards */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); // Up to 3 cards per row on large screens
   gap: 16px;
-  justify-content: center;
 }
 
-.poster-card {
-  width: 300px;
-  border-radius: 8px;
-  transition: transform 0.2s;
-  cursor: pointer;
-}
-
-.poster-card:hover {
-  transform: scale(1.02);
-}
-
-.mat-card-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
-.mat-card-content p {
-  margin: 5px 0;
-}
-
-.loading,
-.error {
-  text-align: center;
-  font-size: 1.1rem;
-  margin-top: 20px;
-  color: #a00;
-}
-
-/* Responsive adjustments */
-@media (max-width: 800px) {
-  .posters-container {
-    justify-content: center;
+/* Medium screens: 2 columns per row */
+@media (max-width: 960px) {
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/* Mobile screens: 1 column per row */
+@media (max-width: 600px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Optional additional padding inside each card */
+.poster-card {
+  padding: 16px;
 }

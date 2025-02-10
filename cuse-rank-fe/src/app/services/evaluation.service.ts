@@ -18,11 +18,12 @@ export class EvaluationService {
     this.loadFromStorage();
   }
 
-  getAssignedPosters(judgeEmail: string, uniqueCode: string): Observable<EvaluationResponse> {
+  getAssignedPosters(netid: string, uniqueCode: string): Observable<EvaluationResponse> {
     const params = new HttpParams()
-      .set('email', judgeEmail)
+      .set('netid', netid)
       .set('uniqueCode', uniqueCode);
-    return this.http.get<EvaluationResponse>(`${this.apiUrl}/judges/assigned-posters`, { params }).pipe(
+  
+    return this.http.get<EvaluationResponse>(`${this.apiUrl}/judges/assignments`, { params }).pipe(
       tap(response => {
         this.assignedPosters = response;
         localStorage.setItem(this.storageKey, JSON.stringify(response));

@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EvaluationService } from '../../services/evaluation.service';
-import { EvaluationResponse } from '../../models/evaluation.model';
+import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { Router } from '@angular/router';
 import { MatChipsModule } from '@angular/material/chips';
+import { EvaluationResponse } from '../../models/evaluation.model';
 
 @Component({
   selector: 'app-evaluate-results',
@@ -22,11 +22,12 @@ export class EvaluateResultsComponent implements OnInit {
   constructor(private evalService: EvaluationService, private router: Router) {}
 
   ngOnInit(): void {
-    // Ensure that the evaluation session is available (the guard should have already checked this)
+    // Check that the evaluation session is available (the guard should have already checked this)
     if (!this.evalService.assignedPosters) {
       this.router.navigate(['/evaluate']);
       return;
     }
+    // Now using the new structure
     this.evaluationResponse = this.evalService.assignedPosters;
   }
 
