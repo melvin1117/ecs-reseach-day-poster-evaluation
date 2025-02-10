@@ -251,7 +251,13 @@ To update the scraped data, follow these steps:
    ```bash
    python ./data-insert-judge-master.py
    ```
-You can now launch http://localhost in your browser and navigate through the website.
+### You can now launch http://localhost in your browser and navigate through the website.
+
+Two default user will be created if the project is running for the first time; its credentials are:
+
+1. Username: admin@sye.edu, password: password
+2. Username: organizer@syr.edu, password: password
+
 
 ---
 
