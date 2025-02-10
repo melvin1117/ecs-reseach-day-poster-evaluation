@@ -118,6 +118,10 @@ export class UploadService {
       const advisorFirstName = String(row[3] ?? '').trim();
       const advisorLastName = String(row[4] ?? '').trim();
 
+      if (
+        title !== '' &&
+        abstract !== ''
+      ){
         const advisor = await this.judgesMasterRepo.findOne({
           where: { name: Like(`%${advisorFirstName}%${advisorLastName}%`) },
         });
@@ -139,6 +143,7 @@ export class UploadService {
         slots, // Assign slots dynamically
       });
     }
+  }
 
     return { message: 'Posters data uploaded successfully' };
   }
