@@ -7,8 +7,7 @@ from ortools.sat.python import cp_model
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from celery import Celery
-import time
-from sqlalchemy.sql import text  # Import text for safe queries
+from sqlalchemy.sql import text  # Safe SQL queries
 from os import getenv
 
 # Import Celery instance
@@ -25,141 +24,152 @@ DB_PORT = 5432
 @celery_app.task(name="process_event") 
 def process_event(event_id: str):
     """Background Task to Process Judge Assignments"""
+    
+    print(f"Starting processing for event: {event_id}")
 
     engine = create_engine(f'postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
 
-    # Fetch judges data
-    faculty_df = pd.read_sql_query("SELECT * FROM judges_master;", engine)
+    # ---------------- Load Data ---------------- #
+    try:
+        faculty_df = pd.read_sql_query("SELECT id, name, department, details FROM judges_master;", engine)
+        print("Loaded faculty data")
 
-    # Fetch posters with advisor name
-    abstracts_df = pd.read_sql_query("""
-        SELECT p.id, p.title, p.abstract, j.name AS advisor_name
-        FROM posters p
-        LEFT JOIN judges_master j ON p.advisor_id = j.id
-    """, engine)
+        abstracts_df = pd.read_sql_query("""
+            SELECT p.id, p.title, p.abstract, p.slots, j.name AS advisor_name
+            FROM posters p
+            LEFT JOIN judges_master j ON p.advisor_id = j.id
+        """, engine)
+        print("Loaded posters data")
 
-    # Step 1: Load `event_judges` from the database (fetching all columns)
-    event_judges_df = pd.read_sql_query("""
-        SELECT id AS event_judge_id, judge_id, event_id, availability, unique_code 
-        FROM event_judges;
-    """, engine)
+        event_judges_df = pd.read_sql_query("""
+            SELECT id AS event_judge_id, judge_id, event_id, availability, unique_code 
+            FROM event_judges;
+        """, engine)
+        print("Loaded event judges data")
 
-    # Step 2: Load `judges_master`
-    faculty_df = pd.read_sql_query("SELECT id, name, department, details FROM judges_master;", engine)
+    except SQLAlchemyError as e:
+        print(f"Database query failed: {str(e)}")
+        return {"status": "Error", "message": f"Database query failed: {str(e)}"}
 
-    # Step 3: Merge `event_judges` with `judges_master` using `judge_id`
+    # Merge event judges with faculty data
     merged_judges = event_judges_df.merge(
-        faculty_df[["id", "name", "department", "details"]], 
-        left_on="judge_id", right_on="id", how="left"
-    )
+        faculty_df, left_on="judge_id", right_on="id", how="left"
+    ).rename(columns={"name": "Full Name", "details": "Expertise", "availability": "Hour available"})
+    print("Merged judges data")
 
-    # Rename columns for clarity
-    merged_judges.rename(columns={
-        "name": "Full Name",
-        "details": "Expertise",
-        "availability": "Hour available"
-    }, inplace=True)
+    # Remove duplicate judge IDs (prevents indexing issues)
+    merged_judges = merged_judges.drop_duplicates(subset=["judge_id"], keep="first")
+    print("Removed duplicate judges")
 
-    # Select only relevant columns
-    merged_judges = merged_judges[["event_judge_id", "judge_id", "event_id", "Full Name", "department", "Expertise", "Hour available", "unique_code"]]
-
-    # Ensure Expertise column is cleaned
-    merged_judges["Expertise"] = merged_judges["Expertise"].fillna("").astype(str)  # Prevent NaN issues
-
-
-    # Clean expertise function
+    # Clean expertise text
     def clean_expertise(text):
-        if pd.isna(text) or text.strip() == "":
+        if not text or pd.isna(text) or text.strip() == "":
             return "N/A"
         text = re.sub(r'\S+@\S+', '', text)  # Remove emails
         text = re.sub(r'\d{1,}-\d{1,}', '', text)  # Remove numerical ranges
         return text.strip()
 
     merged_judges["Cleaned Expertise"] = merged_judges["Expertise"].apply(clean_expertise)
+    print("Cleaned expertise text")
 
-    # Extract projects
-    projects = abstracts_df[["id", "title", "abstract", "advisor_name"]]
-    projects["abstract"] = projects["abstract"].fillna("N/A").astype(str)
+    # Ensure abstracts are filled
+    projects = abstracts_df[["id", "title", "abstract", "advisor_name", "slots"]].fillna("N/A")
+    print("Filled missing abstract data")
 
-    # Step 2: Compute Similarity Scores
+    # ---------------- Compute Similarity Scores ---------------- #
     model = SentenceTransformer('all-MiniLM-L6-v2')
+    print("Loaded sentence transformer model")
 
-    judge_embeddings = {row["Full Name"]: model.encode(row["Cleaned Expertise"]) for _, row in merged_judges.iterrows()}
-    project_embeddings = {row["id"]: model.encode(row["abstract"]) for _, row in projects.iterrows()}
+    judge_embeddings = {
+        row["judge_id"]: model.encode(row["Cleaned Expertise"]) 
+        for _, row in merged_judges.iterrows()
+    }
+    print("Generated embeddings for judges")
 
-    similarity_matrix = pd.DataFrame(index=merged_judges["Full Name"], columns=projects["id"])
+    project_embeddings = {
+        row["id"]: model.encode(row["abstract"]) 
+        for _, row in projects.iterrows()
+    }
+    print("Generated embeddings for projects")
 
-    for j_id in merged_judges["Full Name"]:
+    # Initialize similarity matrix with zeros
+    similarity_matrix = pd.DataFrame(
+        0.0, index=merged_judges["judge_id"].unique(), columns=projects["id"].unique()
+    )
+    print("Initialized similarity matrix")
+
+    # Populate similarity matrix
+    for j_id in merged_judges["judge_id"]:
         for p_id in projects["id"]:
-            sim_score = cosine_similarity([judge_embeddings[j_id]], [project_embeddings[p_id]])[0][0]
-            similarity_matrix.loc[j_id, p_id] = sim_score
+            if j_id in judge_embeddings and p_id in project_embeddings:
+                similarity_matrix.loc[j_id, p_id] = cosine_similarity(
+                    [judge_embeddings[j_id]], [project_embeddings[p_id]]
+                )[0][0]
+    print("Computed similarity matrix")
 
-    similarity_matrix = similarity_matrix.astype(float)
-    similarity_matrix = (similarity_matrix - similarity_matrix.min().min()) / (similarity_matrix.max().max() - similarity_matrix.min().min())
+    # Normalize similarity scores
+    if similarity_matrix.max().max() - similarity_matrix.min().min() != 0:
+        similarity_matrix = (similarity_matrix - similarity_matrix.min().min()) / (
+            similarity_matrix.max().max() - similarity_matrix.min().min()
+        )
+    print("Normalized similarity scores")
 
-    # Step 3: Solve Assignment Problem
+    # ---------------- Solve Assignment Problem ---------------- #
     solver_model = cp_model.CpModel()
-    assignments = {}
+    assignments = {
+        (j, p): solver_model.NewBoolVar(f'judge{j}_poster{p}')
+        for j in merged_judges["judge_id"] for p in projects["id"]
+    }
+    print("Created optimization model variables")
 
-    for j in merged_judges["Full Name"]:
-        for p in projects["id"]:
-            assignments[(j, p)] = solver_model.NewBoolVar(f'judge{j}_poster{p}')
-
-    # Assign exactly 2 judges per poster
+    # Each poster is assigned exactly 2 judges
     for p in projects["id"]:
-        solver_model.Add(sum(assignments[(j, p)] for j in merged_judges["Full Name"]) == 2)
+        solver_model.Add(sum(assignments[(j, p)] for j in merged_judges["judge_id"]) == 2)
+    print("Added constraint: each poster gets 2 judges")
 
-    # Assign each judge to at most 6 posters
-    for j in merged_judges["Full Name"]:
+    # Each judge is assigned to at most 6 posters
+    for j in merged_judges["judge_id"]:
         solver_model.Add(sum(assignments[(j, p)] for p in projects["id"]) <= 6)
+    print("Added constraint: each judge can evaluate up to 6 posters")
 
-    # Ensure judges are available during poster time slots
+    # Ensure availability constraints
     for _, judge in merged_judges.iterrows():
         for _, poster in projects.iterrows():
-            poster_time_slot = 1 if int(poster["id"]) % 2 == 1 else 2
+            poster_time_slot = int(poster["slots"])
             judge_time_slots = str(judge["Hour available"]).strip().lower() if pd.notna(judge["Hour available"]) else "both"
 
             if judge_time_slots != "both" and str(poster_time_slot) not in judge_time_slots:
-                solver_model.Add(assignments[(judge["Full Name"], poster["id"])] == 0)
+                solver_model.Add(assignments[(judge["judge_id"], poster["id"])] == 0)
+    print("Added availability constraints")
 
     # Maximize similarity scores
-    objective = sum(assignments[(j, p)] * int(similarity_matrix.loc[j, p] * 100) for j in merged_judges["Full Name"] for p in projects["id"])
-    solver_model.Maximize(objective)
+    solver_model.Maximize(
+        sum(assignments[(j, p)] * int(float(similarity_matrix.loc[j, p])) * 100
+            for j in merged_judges["judge_id"] for p in projects["id"])
+    )
+    print("Added objective function to maximize similarity scores")
 
     solver = cp_model.CpSolver()
     status = solver.Solve(solver_model)
+    print(f"Optimization solver status: {status}")
 
-    # Step 4: Insert Results into judge_assignments Table
+    # ---------------- Insert Results into Database ---------------- #
     if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
-
-        with engine.begin() as conn:  # Ensures transactions are managed properly
+        with engine.begin() as conn:
             for _, judge in merged_judges.iterrows():
                 for _, poster in projects.iterrows():
-                    if solver.Value(assignments[(judge["Full Name"], poster["id"])]) == 1:
-                        
-                        # Step 1: Fetch judge's `id` from `judges_master`
-                        master_judge_id_result = conn.execute(
-                            text("SELECT id FROM judges_master WHERE name = :name"),
-                            {"name": judge["Full Name"]}
-                        ).fetchone()
-
-                        if not master_judge_id_result:
-                            continue  # Skip if judge is not found in judges_master
-
-                        master_judge_id = master_judge_id_result[0]  # Extract UUID
-
-                        # Step 2: Fetch corresponding `id` from `event_judges` using master judge's `id`
+                    if solver.Value(assignments[(judge["judge_id"], poster["id"])]) == 1:
                         event_judge_id_result = conn.execute(
-                            text("SELECT id FROM event_judges WHERE judge_id = :master_judge_id"),
-                            {"master_judge_id": master_judge_id}
+                            text("SELECT id FROM event_judges WHERE judge_id = :judge_id"),
+                            {"judge_id": judge["judge_id"]}
                         ).fetchone()
 
                         if not event_judge_id_result:
-                            continue  # Skip if judge is not found in event_judges
+                            print(f"Warning: Event judge ID not found for judge_id {judge['judge_id']}. Skipping...")
+                            continue
 
-                        event_judge_id = event_judge_id_result[0]  # Extract UUID
+                        event_judge_id = event_judge_id_result[0]
 
-                        # Step 3: Insert into `judge_assignments`
                         conn.execute(
                             text("""
                                 INSERT INTO judge_assignments (id, relevance_score, assigned_at, event_id, judge_id, poster_id)
@@ -167,15 +177,14 @@ def process_event(event_id: str):
                                 ON CONFLICT (judge_id, poster_id) DO NOTHING;
                             """),
                             {
-                                "relevance_score": round(similarity_matrix.loc[judge["Full Name"], poster["id"]], 2),
+                                "relevance_score": round(similarity_matrix.loc[judge["judge_id"], poster["id"]], 2),
                                 "event_id": event_id,
-                                "judge_id": event_judge_id,  # Use `id` from event_judges
+                                "judge_id": event_judge_id,
                                 "poster_id": poster["id"],
                             }
                         )
-
-
-
+        print("Judge assignments successfully stored in database")
         return {"status": "Task Completed", "message": "Judge assignment stored in DB"}
 
+    print("No feasible solution found")
     return {"status": "Failed", "message": "No feasible solution found!"}

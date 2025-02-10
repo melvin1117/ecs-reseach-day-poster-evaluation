@@ -14,6 +14,8 @@ import { Evaluation } from './entities/evaluations.entity';
 import { Ranking } from './entities/rankings.entity';
 import { ScoringService } from './services/scoring.service';
 import { ScoringController } from './controllers/scoring.controller';
+import { ScoringQueryService } from './services/scoring-query.service';
+import { ScoringQueryController } from './controllers/scoring-query.controller';
 import { AuthController } from './controllers/auth_controller';
 import { AuthService } from './services/auth_service';
 import { EventController } from './controllers/event.controller';
@@ -25,6 +27,10 @@ import { JudgeController } from './controllers/judge.controller';
 import { JudgeService } from './services/judge.service';
 import { AssignmentService } from './services/assignment.service';
 import { AssignmentController } from './controllers/assignment.controller';
+import { FastApiController } from './controllers/fast-api.controller';
+import { FastApiService } from './services/fast-api.service';
+import { FileUploadedCheckerController } from './controllers/file-uploader-checker.controller';
+import { FileUploadedCheckerService } from './services/file-uploader-checker.service';
 
 @Module({
   imports: [
@@ -67,21 +73,27 @@ import { AssignmentController } from './controllers/assignment.controller';
   controllers: [
     AppController,
     ScoringController,
+    ScoringQueryController,
     AuthController,
     EventController,
     UploadController,
     JudgeController,
     AssignmentController,
+    FastApiController,
+    FileUploadedCheckerController,
   ],
   providers: [
     JwtAuthGuard,
     AppService,
     ScoringService,
+    ScoringQueryService,
     AuthService,
     EventService,
     UploadService,
     JudgeService,
-    AssignmentService
+    AssignmentService,
+    FastApiService,
+    FileUploadedCheckerService,
   ],
 })
 export class AppModule {}

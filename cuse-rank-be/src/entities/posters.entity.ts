@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  JoinColumn,
+} from 'typeorm';
 import { Event } from './events.entity';
 import { JudgeMaster } from './judges_master.entity';
 
@@ -23,6 +30,9 @@ export class Poster {
 
   @Column()
   program: string;
+
+  @Column({ type: 'int', nullable: false })
+  slots: number;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

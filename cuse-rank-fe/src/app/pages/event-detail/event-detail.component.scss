@@ -24,13 +24,14 @@
 }
 
 .edit-button {
-  /* Optional styling for edit button */
+  /* Optional styling for the edit button */
 }
 
 .event-created {
   font-size: 1rem;
   color: #777;
   margin-top: 8px;
+  text-align: center;
 }
 
 .event-info {
@@ -88,6 +89,17 @@ mat-chip-listbox {
   font-size: 1rem;
   color: green;
   text-align: center;
+}
+
+.mapping-section {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.mapping-section button {
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+  padding: 25px;
 }
 
 .assignment-section {

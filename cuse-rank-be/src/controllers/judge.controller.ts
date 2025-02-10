@@ -5,15 +5,11 @@ import { JudgeService } from '../services/judge.service';
 export class JudgeController {
     constructor(private readonly judgeService: JudgeService) { }
 
-    @Get('/assigned-posters')
-    async getJudgeAssignedPosters(
-        @Query('email') judgeEmail: string,
+    @Get('assignments')
+    async getJudgeAssignments(
+        @Query('netid') netid: string,
         @Query('uniqueCode') uniqueCode: string,
     ) {
-        if (!judgeEmail || !uniqueCode) {
-            throw new NotFoundException('Judge email and unique code are required');
-        }
-
-        return await this.judgeService.getJudgeAssignedPosters(judgeEmail, uniqueCode);
+        return this.judgeService.getAssignments(netid, uniqueCode);
     }
 }
