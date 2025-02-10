@@ -27,6 +27,10 @@ import { JudgeController } from './controllers/judge.controller';
 import { JudgeService } from './services/judge.service';
 import { AssignmentService } from './services/assignment.service';
 import { AssignmentController } from './controllers/assignment.controller';
+import { FastApiController } from './controllers/fast-api.controller';
+import { FastApiService } from './services/fast-api.service';
+import { FileUploadedCheckerController } from './controllers/file-uploader-checker.controller';
+import { FileUploadedCheckerService } from './services/file-uploader-checker.service';
 
 @Module({
   imports: [
@@ -75,6 +79,8 @@ import { AssignmentController } from './controllers/assignment.controller';
     UploadController,
     JudgeController,
     AssignmentController,
+    FastApiController,
+    FileUploadedCheckerController,
   ],
   providers: [
     JwtAuthGuard,
@@ -86,6 +92,8 @@ import { AssignmentController } from './controllers/assignment.controller';
     UploadService,
     JudgeService,
     AssignmentService,
+    FastApiService,
+    FileUploadedCheckerService,
   ],
 })
 export class AppModule {}
