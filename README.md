@@ -142,21 +142,42 @@ The **scoring and ranking algorithm** processes **evaluations submitted by judge
 - **Weight Normalization & Aggregation**: TypeScript
 
 ### **Working of Algorithm**
+
 1. **Fetch Evaluations & Posters**:
    - Retrieves **evaluations** linked to each poster.
    - Loads event-specific **criteria weightage** from the database.
+
 2. **Compute Weighted Scores**:
    - Normalizes weightage across criteria.
    - Computes weighted scores per judge evaluation.
    - Adjusts scores based on **judge expertise relevance**.
+
+   **Formula:**
+   \[ S_{ij} = \sum_{k} W_k \times C_{ijk} \]
+   where:
+   - \( S_{ij} \) is the total weighted score given by judge \( j \) to poster \( i \).
+   - \( W_k \) is the weight for criterion \( k \).
+   - \( C_{ijk} \) is the raw score given by judge \( j \) for poster \( i \) under criterion \( k \).
+   
+   **Judge expertise relevance adjustment:**
+   \[ S'_{ij} = S_{ij} \times R_{ij} \]
+   where \( R_{ij} \) is the expertise relevance factor (computed using text similarity between the abstract and judge's expertise).
+
 3. **Calculate Final Rankings**:
    - Averages scores across assigned judges.
    - Generates **rankings based on weighted final scores**.
+
+   **Formula:**
+   \[ S_i = \frac{\sum_{j} S'_{ij}}{N_j} \]
+   where \( N_j \) is the number of judges assigned to poster \( i \).
+   
 4. **Store Rankings in Database**:
    - Inserts computed rankings into the `rankings` table.
    - Ensures **correct referencing of event and poster entities**.
 
 This scoring system provides **real-time rankings** and ensures **fair, criteria-based evaluation** for research poster presentations.
+
+
 
 ---
 
