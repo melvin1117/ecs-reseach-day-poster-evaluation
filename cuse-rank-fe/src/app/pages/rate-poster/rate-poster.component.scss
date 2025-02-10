@@ -1,0 +1,38 @@
+/* Container similar to Bootstrap container */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+  
+  .rate-poster-container {
+    background: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .poster-title {
+    font-size: 1.75rem;
+    margin-bottom: 8px;
+  }
+  
+  .poster-abstract {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 16px;
+  }
+  
+  .criteria-fields {
+    margin-bottom: 16px;
+  }
+  
+  .rating-field {
+    width: 100%;
+  }
+  
+  .comment-field {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+  

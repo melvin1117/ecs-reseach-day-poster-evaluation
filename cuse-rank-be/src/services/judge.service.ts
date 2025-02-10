@@ -87,6 +87,7 @@ export class JudgeService {
     const sql = `
       SELECT
         ja.relevance_score AS relevance_score,
+        p.id AS id,
         p.title AS title,
         p.abstract AS abstract,
         p.program AS program,
@@ -117,6 +118,7 @@ export class JudgeService {
         groupedPosters[slot] = [];
       }
       groupedPosters[slot].push({
+        id: a.id,
         title: a.title,
         abstract: a.abstract,
         program: a.program,
@@ -140,7 +142,7 @@ export class JudgeService {
       email: judge.email,
       img: judge.profile_img,
       dept: judge.department,
-      event_id: activeEventJudge.event_id,
+      event: activeEventJudge.event_id,
       posters: groupedPosters, // Grouped by the poster's slot
     };
   

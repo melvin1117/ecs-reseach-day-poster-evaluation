@@ -32,11 +32,11 @@ export class EvaluateComponent {
       this.evalService.getAssignedPosters(netid, uniqueCode).subscribe({
         next: (response) => {
           // Evaluation session is now stored.
-          this.router.navigate(['/evaluate/results']);
+          this.router.navigate(['/evaluate/event']);
         },
         error: (err) => {
           console.error('Evaluation login failed', err);
-          this.error = 'Invalid unique code or NetID.';
+          this.error = err.error.message;
         }
       });
     }

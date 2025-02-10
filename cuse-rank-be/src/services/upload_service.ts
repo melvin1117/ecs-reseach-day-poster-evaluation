@@ -64,7 +64,7 @@ export class UploadService {
             unique_code: Math.floor(100000 + Math.random() * 900000).toString(),
             event_id: event,
             judge_id: judge,
-            availability: JSON.stringify({ status: availability }),
+            availability: availability,
           });
         }
       }
