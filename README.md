@@ -160,7 +160,6 @@ This scoring system provides **real-time rankings** and ensures **fair, criteria
 
 ---
 
-
 ## 🚀 Setup & Installation (Docker)
 
 ### **1️⃣ Clone the Repository**
@@ -179,13 +178,52 @@ docker-compose up --build
 
 ## 📌 How to Run
 
-### **Running the System with Docker**
-After running `docker-compose up --build`, the following services will be available:
-- **Frontend (Angular)** → `http://localhost:80`
-- **Backend API (NestJS)** → `http://localhost:5000`
-- **ML API (FastAPI + Celery)** → `http://localhost:8000`
-- **Redis (Task Queue)** → `localhost:6379`
-- **Database UI (Adminer)** → `http://localhost:8080`
+### Running the System with Docker
+Start all services by running:
+```bash
+docker-compose up --build
+```
+This command will start the following services:
+- **Frontend (Angular):** [http://localhost:80](http://localhost:80)
+- **Backend API (NestJS):** [http://localhost:5000](http://localhost:5000)
+- **ML API (FastAPI + Celery):** [http://localhost:8000](http://localhost:8000)
+- **Redis (Task Queue):** `localhost:6379`
+- **Database UI (Adminer):** [http://localhost:8080](http://localhost:8080)
+
+## Following need to be run if the docker is being built for the first time 
+
+### Inserting Scraped Data into the Database
+After the Docker services are running, open a new terminal window, navigate to the project directory, and run the data insertion script:
+```bash
+cd cuse-rank-scraper
+python ./data-insert-judge-master.py
+```
+This script will insert the scraped data from the SU ECS faculty webpage into your database.
+
+### Updating Scraped Data
+To update the scraped data, follow these steps:
+
+1. **Ensure the Chrome Selenium Driver is Installed:**  
+   Make sure that the Chrome Selenium driver is available on your system.
+
+2. **Set Up a Virtual Environment and Install Dependencies:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # For Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+3. **Run the Scraper Script:**
+   ```bash
+   python scrapper.py
+   ```
+
+4. **Insert the Updated Data into the Database:**  
+   Once the scraper has finished updating the data, run the insertion script again:
+   ```bash
+   python ./data-insert-judge-master.py
+   ```
+You can now launch http://localhost in your browser and navigate through the website.
 
 ---
 
@@ -257,5 +295,4 @@ git push origin feature-branch
 ## 📝 License
 This project is licensed under the **MIT License**.
 
-📩 **For questions or contributions, contact:** `your-email@example.com`
 
