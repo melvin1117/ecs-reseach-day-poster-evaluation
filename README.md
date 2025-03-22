@@ -252,7 +252,7 @@ To update the scraped data, follow these steps:
 
 ---
 
-## 📌 How to Contribute
+## How to Contribute
 ### **1. Fork & Clone the Repository**
 ```sh
 git clone https://github.com/melvin1117/ecs-reseach-day-poster-evaluation.git
