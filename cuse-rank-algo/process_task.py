@@ -76,6 +76,10 @@ def process_event(event_id: str):
     projects = abstracts_df[["id", "title", "abstract", "advisor_name", "slots"]].fillna("N/A")
     print("Filled missing abstract data")
 
+    # Create a mapping of poster id to advisor name for advisor conflict checks
+    poster_advisor = dict(zip(projects["id"], projects["advisor_name"]))
+    print("Created poster to advisor mapping")
+
     # ---------------- Compute Similarity Scores ---------------- #
     model = SentenceTransformer('all-MiniLM-L6-v2')
     print("Loaded sentence transformer model")
@@ -107,6 +111,10 @@ def process_event(event_id: str):
                 )[0][0]
     print("Computed similarity matrix")
 
+    # Save a copy of the original normalized similarity scores
+    similarity_matrix_orig = similarity_matrix.copy()
+    print("Saved original similarity matrix")
+
     # Normalize similarity scores
     if similarity_matrix.max().max() - similarity_matrix.min().min() != 0:
         similarity_matrix = (similarity_matrix - similarity_matrix.min().min()) / (
@@ -129,18 +137,36 @@ def process_event(event_id: str):
 
     # Each judge is assigned to at most 6 posters
     for j in merged_judges["judge_id"]:
+        solver_model.Add(sum(assignments[(j, p)] for p in projects["id"]) >= 1)  # Minimum 1 poster per judge
         solver_model.Add(sum(assignments[(j, p)] for p in projects["id"]) <= 6)
     print("Added constraint: each judge can evaluate up to 6 posters")
 
-    # Ensure availability constraints
+    # Fairness Constraint: Prevent strong bias by limiting high-similarity assignments
+    for j in merged_judges["judge_id"]:
+        max_similarity = similarity_matrix.loc[j].max()
+        min_similarity = similarity_matrix.loc[j].min()
+        
+        # Only apply fairness constraint if there's a significant range in similarity
+        if max_similarity - min_similarity > 0.3:
+            solver_model.Add(sum(assignments[(j, p)] 
+                             for p in projects["id"] if similarity_matrix.loc[j, p] > 0.7) <= 3)
+    print("Added fairness constraints to prevent judge bias")
+
+    # Ensure availability constraints and advisor conflicts
     for _, judge in merged_judges.iterrows():
         for _, poster in projects.iterrows():
+            # Time slot availability check
             poster_time_slot = int(poster["slots"])
             judge_time_slots = str(judge["Hour available"]).strip().lower() if pd.notna(judge["Hour available"]) else "both"
 
             if judge_time_slots != "both" and str(poster_time_slot) not in judge_time_slots:
                 solver_model.Add(assignments[(judge["judge_id"], poster["id"])] == 0)
-    print("Added availability constraints")
+            
+            # Advisor conflict check - judges can't evaluate posters where they're the advisor
+            if judge["Full Name"] == poster_advisor.get(poster["id"], ""):
+                solver_model.Add(assignments[(judge["judge_id"], poster["id"])] == 0)
+    
+    print("Added availability and advisor conflict constraints")
 
     # Maximize similarity scores
     solver_model.Maximize(
