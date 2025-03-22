@@ -1,18 +1,18 @@
 # 🍊 Cuse-Rank: Research Day Evaluation System
 
-## 📌 Introduction & Description
+## Introduction & Description
 Cuse-Rank is a **web-based research poster evaluation system** designed to streamline the evaluation process for research day events. The system enables:
 - **Admins** to create and manage research events.
 - **Organizers** to upload research posters and assign judging criteria.
 - **Judges** to evaluate assigned posters based on configurable criteria.
 - **ML Processing** to intelligently assign judges to posters based on expertise.
-- **Live Ranking System** to update rankings as judges submit evaluations.
+- **Ranking System** to update rankings as judges submit evaluations.
 
 The system ensures a seamless evaluation process with a user-friendly interface and backend automation.
 
 ---
 
-## 🧭 Tech Stack
+## Tech Stack
 - **Frontend**: Angular
 - **Backend**: NestJS (TypeORM, PostgreSQL)
 - **ML Processing**: FastAPI, Celery, Redis
@@ -24,7 +24,7 @@ The system ensures a seamless evaluation process with a user-friendly interface 
 
 ---
 
-## 💪 System Architecture
+## System Architecture
 ```
 Frontend (Angular)  <--->  Backend (NestJS)  <--->  Database (PostgreSQL)
                                    |
@@ -44,39 +44,37 @@ This architecture enables **modular, scalable, and efficient** handling of resea
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 ```
 cuse-rank/
 │── cuse-rank-fe/          # Angular Frontend
 │── cuse-rank-be/          # NestJS Backend
 │── cuse-rank-algo/        # FastAPI + Celery (ML Processing)
-│── redis/                 # Redis for Celery task queue
-│── db/                    # PostgreSQL Database
+│── cuse-rank-scraper/     # Python + Selenium scraper module
 │── docker-compose.yml     # Docker orchestration
 │── README.md              # Documentation
 ```
 
 ---
 
-## 🔗 Database ER Diagram
+## Database ER Diagram
 View the **database schema & entity relationships** here:  
-[📊 Cuse-Rank ER Diagram](https://dbdiagram.io/d/poster-evaluation-67a6b995263d6cf9a0713c4c)
+[Cuse-Rank ER Diagram](https://dbdiagram.io/d/poster-evaluation-67a6b995263d6cf9a0713c4c)
 
 ---
 
-## 🚀 Features
-- ✅ **Admin Dashboard**: Create and manage research events.
-- ✅ **Organizer Portal**: Upload research posters, assign judges, configure scoring criteria.
-- ✅ **Judge Interface**: Evaluate assigned posters based on predefined criteria.
-- ✅ **ML-Based Poster-Judge Mapping**: Uses FastAPI + Celery for intelligent mapping.
-- ✅ **Live Ranking System**: Automatic ranking updates based on judge scores.
-- ✅ **Secure Authentication & Authorization**: Role-based access for admins, organizers, and judges.
-- ✅ **PostgreSQL with ORM (TypeORM + SQLAlchemy)**: Scalable and efficient database handling.
-- ✅ **Dockerized Deployment**: Easy setup for local development and cloud hosting.
+## Features
+- **Dashboard**: Create and manage research events. Upload research posters, assign judges, and configure scoring criteria.
+- **Judge Interface**: Evaluate assigned posters based on predefined criteria.
+- **ML-Based Poster-Judge Mapping**: Uses FastAPI + Celery for intelligent mapping.
+- **Ranking System**: Automatic ranking updates based on judge scores.
+- **Secure Authentication & Authorization**: Role-based access for admins, organizers, and judges.
+- **PostgreSQL with ORM (TypeORM + SQLAlchemy)**: Scalable and efficient database handling.
+- **Dockerized Deployment**: Easy setup for local development and cloud hosting.
 
 ---
 
-## 💪 Scraper Module
+## Scraper Module
 ### **Overview**
 The **scraper module** automates the extraction of faculty data from the **Syracuse University ECS Faculty website**. It retrieves **faculty names, emails, degrees, profile details, and image links**, stores the extracted data in a CSV file, and uploads it into the database.
 
@@ -102,7 +100,7 @@ This module ensures that the system has **an up-to-date list of judges**, mapped
 
 ---
 
-## 💪 Poster Judge Allocation Algorithm
+## Poster Judge Allocation Algorithm
 ### **Overview**
 The **judge allocation algorithm** ensures that each research poster is assigned **exactly 2 judges**, while each judge evaluates **at most 6 posters** based on availability and expertise. The algorithm maximizes fairness and relevance by computing **semantic similarity** between poster abstracts and judge expertise using **Sentence Transformers** and optimizes allocations using **Google OR-Tools**.
 
@@ -132,7 +130,7 @@ This algorithm ensures **fairness, expertise-based allocation, and efficient sch
 
 ---
 
-## 💪 Scoring & Ranking Algorithm
+## Scoring & Ranking Algorithm
 ### **Overview**
 The **scoring and ranking algorithm** processes **evaluations submitted by judges** to compute the final poster rankings. The algorithm applies **weight normalization**, **relevance-weighted scoring**, and ensures **fair ranking** by balancing diverse judging criteria.
 
@@ -187,48 +185,47 @@ This scoring system provides **real-time rankings** and ensures **fair, criteria
 
 
 ---
+## Setup & Installation (Docker)
 
-## 🚀 Setup & Installation (Docker)
+###  Prerequisites
+- Install [**Docker Enginer**](https://docs.docker.com/engine/install/).
+- Ensure **Git** is installed. (`git --version` to check)
+- Python
 
-### **1️⃣ Clone the Repository**
+### **1. Clone the Repository**
 ```sh
 git clone https://github.com/melvin1117/ecs-reseach-day-poster-evaluation.git
 cd ecs-reseach-day-poster-evaluation
 ```
 
-### **2️⃣ Build and Start Containers**
+### **2. Build and Start Containers**
 ```sh
 docker-compose up --build
 ```
-✅ **This will start all modules in Docker containers.**
 
----
-
-## 📌 How to Run
-
-### Running the System with Docker
-Start all services by running:
-```bash
-docker-compose up --build
-```
 This command will start the following services:
-- **Frontend (Angular):** [http://localhost:80](http://localhost:80)
+- **Frontend (Angular):** [http://localhost](http://localhost)
 - **Backend API (NestJS):** [http://localhost:5000](http://localhost:5000)
 - **ML API (FastAPI + Celery):** [http://localhost:8000](http://localhost:8000)
-- **Redis (Task Queue):** `localhost:6379`
 - **Database UI (Adminer):** [http://localhost:8080](http://localhost:8080)
 
-## Following need to be run if the docker is being built for the first time 
+**This will start all modules in Docker containers.**
 
-### Inserting Scraped Data into the Database
-After the Docker services are running, open a new terminal window, navigate to the project directory, and run the data insertion script:
+### **3. Following need to be run if the docker is being built for the first time**
+
+#### Inserting Scraped Data into the Database (required, first time only)
+After the Docker services are running, open a new terminal window, navigate to the project directory, and run the data insertion script (this will insert the faculty master data which is already scraped and stored as CSV in `cuse-rank-scraper` folder:
 ```bash
 cd cuse-rank-scraper
 python ./data-insert-judge-master.py
 ```
-This script will insert the scraped data from the SU ECS faculty webpage into your database.
+This script will insert the already scraped data from the SU ECS faculty webpage into your database.
 
-### Updating Scraped Data
+Two default user will be created if the project is running for the first time; its credentials are:
+1. Username: admin@sye.edu, password: password
+2. Username: organizer@syr.edu, password: password
+
+#### Updating Scraped Data (optional)
 To update the scraped data, follow these steps:
 
 1. **Ensure the Chrome Selenium Driver is Installed:**  
@@ -236,6 +233,7 @@ To update the scraped data, follow these steps:
 
 2. **Set Up a Virtual Environment and Install Dependencies:**
    ```bash
+   cd cuse-rank-scraper
    python -m venv venv
    source venv/bin/activate  # For Windows: venv\Scripts\activate
    pip install -r requirements.txt
@@ -251,82 +249,33 @@ To update the scraped data, follow these steps:
    ```bash
    python ./data-insert-judge-master.py
    ```
-### You can now launch http://localhost in your browser and navigate through the website.
-
-Two default user will be created if the project is running for the first time; its credentials are:
-
-1. Username: admin@sye.edu, password: password
-2. Username: organizer@syr.edu, password: password
-
-
----
-
-## 📌 Running Modules Individually (Without Docker)
-If you prefer to run modules separately, follow these steps:
-
-### **Frontend (Angular)**
-```sh
-cd cuse-rank-fe
-npm install
-npm start
-```
-🟢 Runs on `http://localhost:4200`
-
-### **Backend API (NestJS)**
-```sh
-cd cuse-rank-be
-npm install
-npm run start
-```
-🟢 Runs on `http://localhost:5000`
-
-### **ML Processing (FastAPI + Celery + Redis)**
-#### **Start FastAPI**
-```sh
-cd cuse-rank-algo
-python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-pip install -r requirements.txt
-uvicorn app:app --host 0.0.0.0 --port 8000
-```
-🟢 Runs on `http://localhost:8000`
-
-#### **Start Redis** (If not using Docker)
-```sh
-redis-server
-```
-🟢 Runs on `localhost:6379`
-
-#### **Start Celery Worker**
-```sh
-celery -A celery_worker.celery_app worker --loglevel=info
-```
 
 ---
 
 ## 📌 How to Contribute
-### **1️⃣ Fork & Clone the Repository**
+### **1. Fork & Clone the Repository**
 ```sh
 git clone https://github.com/melvin1117/ecs-reseach-day-poster-evaluation.git
 cd ecs-reseach-day-poster-evaluation
 ```
-### **2️⃣ Create a New Branch**
+### **2. Create a New Branch**
 ```sh
 git checkout -b feature-branch
 ```
-### **3️⃣ Make Changes & Commit**
+### **3. Make Changes & Commit**
 ```sh
 git add .
 git commit -m "Added new feature"
 ```
-### **4️⃣ Push Changes & Create a Pull Request**
+### **4. Push Changes & Create a Pull Request**
 ```sh
 git push origin feature-branch
 ```
 
 ---
 
-## 📝 License
-This project is licensed under the **MIT License**.
+## Developers
+
+Developed by Shubham Melvin Felix, Shreyas Kumar, Uddesh Shyam Kshirsagar, and Abhishek Umesh Gavali.
 
 
